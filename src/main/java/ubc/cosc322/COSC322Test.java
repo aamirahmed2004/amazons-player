@@ -2,14 +2,20 @@
 package ubc.cosc322;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import sfs2x.client.entities.Room;
 import ygraph.ai.smartfox.games.BaseGameGUI;
+import ygraph.ai.smartfox.games.BoardGameModel;
 import ygraph.ai.smartfox.games.GameClient;
 import ygraph.ai.smartfox.games.GameMessage;
+import ygraph.ai.smartfox.games.GameModel;
 import ygraph.ai.smartfox.games.GamePlayer;
+import ygraph.ai.smartfox.games.Amazon.GameBoard;
+import ygraph.ai.smartfox.games.amazons.AmazonsGameMessage;
+import ygraph.ai.smartfox.games.amazons.HumanPlayer;
 
 /**
  * An example illustrating how to implement a GamePlayer
@@ -22,25 +28,36 @@ public class COSC322Test extends GamePlayer{
     private GameClient gameClient = null; 
     private BaseGameGUI gamegui = null;
 	
-    private String userName = null;
-    private String passwd = null;
- 
+    private BoardGameModel board = null;
+    private GameMessage msg = null;
+    // private Amazon amazon = null;
+    private GameBoard boardgame = null;
+    
+    private GameModel gameModel = null;
+
+    // private ArrayList<Integer> gameState = new ArrayList<Integer>(100);
+
+    public Board gameBoard = new Board();
 	
     /**
      * The main method
      * @param args for name and passwd (current, any string would work)
      */
     public static void main(String[] args) {				 
-    	COSC322Test player = new COSC322Test(args[0], args[1]);
+    	COSC322Test player1 = new COSC322Test("Jarvis", args[1]);
+
+        HumanPlayer player2 = new HumanPlayer();
     	
-    	if(player.getGameGUI() == null) {
-    		player.Go();
+    	if(player1.getGameGUI() == null || player2.getGameGUI() == null) {
+    		player1.Go();
+            player2.Go();
     	}
     	else {
     		BaseGameGUI.sys_setup();
             java.awt.EventQueue.invokeLater(new Runnable() {
                 public void run() {
-                	player.Go();
+                	player1.Go();
+                    player2.Go();
                 }
             });
     	}
@@ -64,21 +81,15 @@ public class COSC322Test extends GamePlayer{
 
     @Override
     public void onLogin() {
-        // System.out.println("Congratualations!!! "
-        //         + "I am called because the server indicated that the login is successfully");
-        // System.out.println("The next step is to find a room and join it: "
-        //         + "the gameClient instance created in my constructor knows how!"); 
-        
-        List<Room> rooms = gameClient.getRoomList();
+    	// System.out.println("Congratualations!!! "
+    	// 		+ "I am called because the server indicated that the login is successfully");
+    	// System.out.println("The next step is to find a room and join it: "
+    	// 		+ "the gameClient instance created in my constructor knows how!"); 		
+
+		List<Room>  rooms = gameClient.getRoomList();
 
         // if(rooms.isEmpty()){
         //     System.out.println("No rooms available right now!");
-        // }
-        // else{
-        //     System.out.println("The available room/rooms is/are: "); 
-        //     for (int i = 0; i < rooms.size(); i++) {
-        //         System.out.println(rooms.get(i).getName());
-        //     }
         // }
 
         String roomToJoin = rooms.get(0).getName();
@@ -94,20 +105,44 @@ public class COSC322Test extends GamePlayer{
 
     @Override
     public boolean handleGameMessage(String messageType, Map<String, Object> msgDetails) {
-        //This method will be called by the GameClient when it receives a game-related message
-        //from the server.
-    
-        //For a detailed description of the message types and format, 
-        //see the method GamePlayer.handleGameMessage() in the game-client-api document. 
-        System.out.println("Received game message - Type : "+ messageType + ", Details: "+msgDetails);        
+    	//This method will be called by the GameClient when it receives a game-related message
+    	//from the server.
+	
+    	//For a detailed description of the message types and format, 
+    	//see the method GamePlayer.handleGameMessage() in the game-client-api document. 
+
+		System.out.println("AI Player received game message - Type : "+ messageType + ", Details: " + msgDetails);        
 
         if (messageType.equals(GameMessage.GAME_STATE_BOARD)) {
-            gamegui.setGameState((ArrayList<Integer>) msgDetails.get("game-state"));
-        } else if (messageType.equals(GameMessage.GAME_ACTION_MOVE)) {
-            gamegui.updateGameState(msgDetails);
-        }
 
-        return true;       
+            gamegui.setGameState((ArrayList<Integer>) msgDetails.get("game-state"));
+            // gameBoard.printBoard();
+
+        } else if (messageType.equals(GameMessage.GAME_ACTION_MOVE)) {
+
+            gamegui.updateGameState(msgDetails);
+            System.out.println("Game State: " + msgDetails.get("player-black"));
+            // System.out.println(msgDetails.get("queen-position-current"));
+
+        } else if (messageType.equals(GameMessage.GAME_ACTION_START)) {
+
+            if(this.userName().equals(msgDetails.get("player-black"))){
+                gameBoard.setUp(true);
+            } else if(this.userName().equals(msgDetails.get("player-white"))){
+                gameBoard.setUp(false);
+            }
+
+            System.out.println("Game Start: Black Played by " + msgDetails.get("player-black"));
+            System.out.println("Game Start: White Played by " + msgDetails.get("player-white"));
+
+            System.out.println("Timer Started on Black");
+            // ArrayList<Integer> currentPos = new ArrayList<>(Arrays.asList(1,4));
+            // ArrayList<Integer> newPos = new ArrayList<>(Arrays.asList(4,4));
+            // ArrayList<Integer> arrowPos = new ArrayList<>(Arrays.asList(5,5));
+            // gameClient.sendMoveMessage(currentPos, newPos, arrowPos);
+            // gamegui.updateGameState(currentPos, newPos, arrowPos);
+        }
+    	return true;   	
     }
     
     
@@ -125,7 +160,7 @@ public class COSC322Test extends GamePlayer{
 	@Override
 	public BaseGameGUI getGameGUI() {
 		// TODO Auto-generated method stub
-		return  this.gamegui;
+		return this.gamegui;
 	}
 
 	@Override
@@ -134,5 +169,15 @@ public class COSC322Test extends GamePlayer{
     	gameClient = new GameClient(userName, passwd, this);			
 	}
 
+    public void makeMove() {
+
+        //Make ArrayList of current position of 8 queens, {r1,r2,r3,r4,c1,c2,c3,c4}, pick random number from 1-4 for queen, then pick a random direction 1-3 for direction, then choose coordinates in that direction. Arrow goes to queen's old position. 
+
+        System.out.println("Making Move");
+        ArrayList<Integer> currentPos = new ArrayList<>(Arrays.asList(1,4));
+        ArrayList<Integer> newPos = new ArrayList<>(Arrays.asList(4,4));
+        ArrayList<Integer> arrowPos = new ArrayList<>(Arrays.asList(5,5));
+        gameClient.sendMoveMessage(currentPos, newPos, arrowPos);
+    }
  
 }//end of class
