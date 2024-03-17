@@ -2,6 +2,7 @@
 package ubc.cosc322;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -26,7 +27,7 @@ public class COSC322Test extends GamePlayer{
     public final int EMPTY = 0, WHITE = 1, BLACK = 2, ARROW = 3, BOARD_SIZE = 10;
 
     private GameClient gameClient; 
-    private BaseGameGUI gameGUI;
+    private BaseGameGUI gamegui;
 
     private String userName;
     private String passwd;
@@ -69,7 +70,7 @@ public class COSC322Test extends GamePlayer{
     	
     	//To make a GUI-based player, create an instance of BaseGameGUI
     	//and implement the method getGameGUI() accordingly
-    	this.gameGUI = new BaseGameGUI(this);
+    	this.gamegui = new BaseGameGUI(this);
     }
  
 
@@ -87,18 +88,19 @@ public class COSC322Test extends GamePlayer{
         //     System.out.println("No rooms available right now!");
         // }
 
-        String roomToJoin = rooms.get(0).getName();
+        String roomToJoin = rooms.get(rooms.size()-1).getName();
         System.out.println("Joining Room: " + roomToJoin);
         gameClient.joinRoom(roomToJoin);
 
         userName = gameClient.getUserName();
-        if(gameGUI != null){
-            gameGUI.setRoomInformation(gameClient.getRoomList());
+        if(gamegui != null){
+            gamegui.setRoomInformation(gameClient.getRoomList());
         }
 
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public boolean handleGameMessage(String messageType, Map<String, Object> msgDetails) {
     	//This method will be called by the GameClient when it receives a game-related message
     	//from the server.
@@ -110,13 +112,22 @@ public class COSC322Test extends GamePlayer{
 
         if (messageType.equals(GameMessage.GAME_STATE_BOARD)) {
 
-            gameGUI.setGameState((ArrayList<Integer>) msgDetails.get("game-state"));
-            System.out.println("Game State: " + msgDetails.get("game-state"));
+            getGameGUI().setGameState((ArrayList<Integer>) msgDetails.get("game-state"));
+            // System.out.println("Game State: " + msgDetails.get("game-state"));
+
+        } else if (messageType.equals(GameMessage.GAME_ACTION_MOVE)) {
+
+            getGameGUI().updateGameState(msgDetails);
+
+            Move opponentsMove = new Move(msgDetails);
+            System.out.println("Opponent's Move: " + opponentsMove.toString());
+
+            this.board = new Board(board, opponentsMove);
+            makeRandomMove();
+
+            System.out.println(msgDetails.get("queen-position-current"));
 
         } else if (messageType.equals(GameMessage.GAME_ACTION_START)) {
-
-            System.out.println("Game Start: Black Played by " + msgDetails.get("player-black"));
-            System.out.println("Game Start: White Played by " + msgDetails.get("player-white"));
 
             if(this.userName().equals(msgDetails.get("player-black"))){
                 board = new Board(true);
@@ -126,16 +137,15 @@ public class COSC322Test extends GamePlayer{
                 this.color = WHITE;
             }
 
+            System.out.println("Game Start: Black Played by " + msgDetails.get("player-black"));
+            System.out.println("Game Start: White Played by " + msgDetails.get("player-white"));
+
             System.out.println("Timer Started on Black");
-            makeRandomMove();
 
-        } else if (messageType.equals(GameMessage.GAME_ACTION_MOVE)) {
+            if(this.color == BLACK)
+                makeRandomMove();
+        }
 
-            gameGUI.updateGameState(msgDetails);
-            Move opponentsMove = new Move(msgDetails);
-            this.board = new Board(board, opponentsMove);
-            makeRandomMove();
-        } 
     	return true;   	
     }
     
@@ -153,7 +163,7 @@ public class COSC322Test extends GamePlayer{
 	@Override
 	public BaseGameGUI getGameGUI() {
 		// TODO Auto-generated method stub
-		return this.gameGUI;
+		return this.gamegui;
 	}
 
 	@Override
@@ -167,14 +177,14 @@ public class COSC322Test extends GamePlayer{
 		ArrayList<Move> moves = MoveGenerator.getAllMoves(this.board, this.color);
 		Move randomMove = moves.get((int) (Math.random() * moves.size()));
         System.out.println("Random Move: " + randomMove.toString());
-        
+
 		this.board = new Board(board, randomMove);
 
         Move moveForServer = randomMove.getMoveForServer();
         ArrayList<Integer> currentPos = moveForServer.getOldPos(), newPos = moveForServer.getNewPos(), arrowPos = moveForServer.getArrowPos();
 
-        gameClient.sendMoveMessage(currentPos, newPos, arrowPos);
-        gameGUI.updateGameState(currentPos, newPos, arrowPos);
+        getGameClient().sendMoveMessage(currentPos, newPos, arrowPos);
+        getGameGUI().updateGameState(currentPos, newPos, arrowPos);
     }
  
 }//end of class

@@ -21,9 +21,9 @@ public class Move {
     @SuppressWarnings("unchecked")
     public Move(Map<String, Object> msgDetails) {
 
-        oldPos = (ArrayList<Integer>) msgDetails.get(AmazonsGameMessage.QUEEN_POS_CURR);
-        newPos = (ArrayList<Integer>) msgDetails.get(AmazonsGameMessage.QUEEN_POS_NEXT);
-        arrowPos = (ArrayList<Integer>) msgDetails.get(AmazonsGameMessage.ARROW_POS);
+        oldPos = (ArrayList<Integer>) ((ArrayList<Integer>) msgDetails.get(AmazonsGameMessage.QUEEN_POS_CURR)).clone();
+        newPos = (ArrayList<Integer>) ((ArrayList<Integer>) msgDetails.get(AmazonsGameMessage.QUEEN_POS_NEXT)).clone();
+        arrowPos = (ArrayList<Integer>) ((ArrayList<Integer>) msgDetails.get(AmazonsGameMessage.ARROW_POS)).clone();
 
         int oldX = oldPos.get(1);
         int oldY = oldPos.get(0);
@@ -40,7 +40,6 @@ public class Move {
         arrowPos.set(1, arrowY - 1);
     }
 
-    // Internal constructor
     public Move(int oldX, int oldY, int newX, int newY, int arrowX, int arrowY) {
         oldPos = new ArrayList<>(Arrays.asList(oldX, oldY));
         newPos = new ArrayList<>(Arrays.asList(newX, newY));
@@ -59,7 +58,8 @@ public class Move {
         return arrowPos;
     }
 
-    // Returns a string representation of the move in conventional notation: [oldX, oldY]-[newX, newY]/[arrowX, arrowY], except x-values are represented as letters
+    // Returns a string representation of the move in conventional notation (taken from littlegolem.net) of the form: 
+    //  [oldX, oldY]-[newX, newY]/[arrowX, arrowY], except x-values are represented as letters
     @Override
     public String toString() {
 

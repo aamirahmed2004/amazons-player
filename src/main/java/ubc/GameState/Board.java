@@ -6,19 +6,21 @@ public class Board {
 
     public final int EMPTY = 0, WHITE = 1, BLACK = 2, ARROW = 3, BOARD_SIZE = 10;
 
-    // Assuming starting position is always the same, as below (white always starts at the bottom)
+    // Assuming starting position is always the same, as below (white always starts at the bottom, which translates to the right side of the 2D array)
     private int[][] gameBoard = {
-        {0,0,0,2,0,0,2,0,0,0},
+        {0,0,0,2,0,0,1,0,0,0},
         {0,0,0,0,0,0,0,0,0,0},
         {0,0,0,0,0,0,0,0,0,0},
-        {2,0,0,0,0,0,0,0,0,2},
+        {2,0,0,0,0,0,0,0,0,1},
         {0,0,0,0,0,0,0,0,0,0},
         {0,0,0,0,0,0,0,0,0,0},
-        {1,0,0,0,0,0,0,0,0,1},
+        {2,0,0,0,0,0,0,0,0,1},
         {0,0,0,0,0,0,0,0,0,0},
         {0,0,0,0,0,0,0,0,0,0},
-        {0,0,0,1,0,0,1,0,0,0},
-    };
+        {0,0,0,2,0,0,1,0,0,0},
+    };      // gameBoard[BOARD_SIZE-1][0], gameBoard[BOARD_SIZE-2][0].... gameBoard[BOARD_SIZE-10][0]
+            // gameBoard[BOARD_SIZE-1][1], gameBoard[BOARD_SIZE-2][1].... gameBoard[BOARD_SIZE-10][1]
+
 
     private boolean isBlack;
 
@@ -62,26 +64,32 @@ public class Board {
 
     // Constructor used to create a new board from the existing board + a move
     public Board(Board oldBoard, Move move) {
-        
-        if(debugMode)
-            System.out.println("Before move: \n" + toString());
 
         this.gameBoard = oldBoard.gameBoard;
+        this.isBlack = oldBoard.isBlack;
         this.friendlyQueens = oldBoard.friendlyQueens;
         this.enemyQueens = oldBoard.enemyQueens;
+
+        if(debugMode){
+            System.out.println("Notation: \n" + notationToString());
+            System.out.println("----------------------------------------");
+            System.out.println("Before move: \n" + toString());
+        }
 
         int newX = move.getNewPos().get(0);
         int newY = move.getNewPos().get(1);
         int oldX = move.getOldPos().get(0);
         int oldY = move.getOldPos().get(1);
+        int arrowX = move.getArrowPos().get(0);
+        int arrowY = move.getArrowPos().get(1);
 
         // Get value of the queen that is to be moved
         int current = gameBoard[oldX][oldY];
 
-        // Update the board
+        // Update the board : NEEDS FIXING
         gameBoard[newX][newY] = current;
         gameBoard[oldX][oldY] = EMPTY;
-        gameBoard[move.getArrowPos().get(0)][move.getArrowPos().get(1)] = ARROW;
+        gameBoard[arrowX][arrowY] = ARROW;
 
         // Update the queen that moved
         if (isFriendly(current)) {
@@ -148,12 +156,40 @@ public class Board {
         return isBlack;
     }
 
+    public String notationToString(){
+
+        StringBuilder boardToString = new StringBuilder();
+
+        String[] letters = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
+
+        // starting from the first column
+        for (int y = BOARD_SIZE - 1; y >= 0; y--) { 
+            boardToString.append("[");
+            // starting from the bottom row
+            for (int x = 0; x < BOARD_SIZE; x++) {   
+                boardToString.append(letters[x] + (y + 1) + (x == BOARD_SIZE - 1 ? "": ", "));
+            }
+            boardToString.append("]\n");
+        }
+
+        return boardToString.toString().replace("10", "X");  
+    }
+
     @Override
     public String toString() {
-        // we use deepToString since board is a 2D array
-        return Arrays.deepToString(gameBoard)
-                        .replace("[[", "[").replace("]]", "]") //remove the extra brackets at the start and end
-                        .replace("], ", "]\n") //since it is a 2D array, replace the comma and space with a newline
-                        .replace("2", "B").replace("1", "W").replace("3", "X");  //replace the numbers with letters
+        
+        StringBuilder boardToString = new StringBuilder();
+
+        // starting from the first column
+        for (int x = 0; x < BOARD_SIZE; x++) { 
+            boardToString.append("[");
+            // starting from the bottom row
+            for (int y = BOARD_SIZE - 1; y >= 0; y--) {  
+                boardToString.append(gameBoard[y][x] + (y == 0 ? "": ", "));
+            }
+            boardToString.append("]\n");
+        }
+
+        return boardToString.toString().replace("1", "W").replace("2", "B").replace("3", "X");
     }
 }
