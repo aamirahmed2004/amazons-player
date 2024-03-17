@@ -1,23 +1,21 @@
 package ubc.GameState;
 
-import java.util.Arrays;
-
 public class Board {
 
     public final int EMPTY = 0, WHITE = 1, BLACK = 2, ARROW = 3, BOARD_SIZE = 10;
 
     // Assuming starting position is always the same, as below (white always starts at the bottom, which translates to the right side of the 2D array)
     private int[][] gameBoard = {
-        {0,0,0,2,0,0,1,0,0,0},
+        {0,0,0,1,0,0,2,0,0,0},
         {0,0,0,0,0,0,0,0,0,0},
         {0,0,0,0,0,0,0,0,0,0},
-        {2,0,0,0,0,0,0,0,0,1},
+        {1,0,0,0,0,0,0,0,0,2},
         {0,0,0,0,0,0,0,0,0,0},
         {0,0,0,0,0,0,0,0,0,0},
-        {2,0,0,0,0,0,0,0,0,1},
+        {1,0,0,0,0,0,0,0,0,2},
         {0,0,0,0,0,0,0,0,0,0},
         {0,0,0,0,0,0,0,0,0,0},
-        {0,0,0,2,0,0,1,0,0,0},
+        {0,0,0,1,0,0,2,0,0,0},
     };      // gameBoard[BOARD_SIZE-1][0], gameBoard[BOARD_SIZE-2][0].... gameBoard[BOARD_SIZE-10][0]
             // gameBoard[BOARD_SIZE-1][1], gameBoard[BOARD_SIZE-2][1].... gameBoard[BOARD_SIZE-10][1]
 
@@ -33,8 +31,9 @@ public class Board {
     // Constructor used when we receive game-state-board message to create a new board from the game state 
     public Board(boolean playerIsBlack) {
         
-        friendlyQueens = new int[4][2];
-        enemyQueens = new int[4][2];
+        this.friendlyQueens = new int[4][2];
+        this.enemyQueens = new int[4][2];
+        this.isBlack = playerIsBlack;
 
         int friendlyQueensIndex = 0, enemyQueensIndex = 0;
 
@@ -58,17 +57,16 @@ public class Board {
             }
         }
 
-        if(debugMode)
-            System.out.println("Team queens: " + Arrays.deepToString(friendlyQueens) + "\nEnemy queens: " + Arrays.deepToString(enemyQueens));
+        // if(debugMode)
+        //     System.out.println("Team queens: " + Arrays.deepToString(friendlyQueens) + "\nEnemy queens: " + Arrays.deepToString(enemyQueens));
+    }
+
+    public void makeMove(Move move){
+        makeMove(move, false);
     }
 
     // Constructor used to create a new board from the existing board + a move
-    public Board(Board oldBoard, Move move) {
-
-        this.gameBoard = oldBoard.gameBoard;
-        this.isBlack = oldBoard.isBlack;
-        this.friendlyQueens = oldBoard.friendlyQueens;
-        this.enemyQueens = oldBoard.enemyQueens;
+    public void makeMove(Move move, boolean opponentsMove) {
 
         if(debugMode){
             System.out.println("Notation: \n" + notationToString());
@@ -159,18 +157,31 @@ public class Board {
     public String notationToString(){
 
         StringBuilder boardToString = new StringBuilder();
+        StringBuilder teamQueenPositions = new StringBuilder();
+        StringBuilder enemyQueenPositions = new StringBuilder();
 
         String[] letters = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
+        teamQueenPositions.append("Team queens: [");
+        enemyQueenPositions.append("Enemy queens: [");
 
         // starting from the first column
-        for (int y = BOARD_SIZE - 1; y >= 0; y--) { 
+        for (int x = BOARD_SIZE - 1; x >= 0; x--) { 
             boardToString.append("[");
             // starting from the bottom row
-            for (int x = 0; x < BOARD_SIZE; x++) {   
-                boardToString.append(letters[x] + (y + 1) + (x == BOARD_SIZE - 1 ? "": ", "));
+            for (int y = 0; y < BOARD_SIZE; y++) {    
+                boardToString.append(letters[y] + (x + 1) + (y == BOARD_SIZE-1 ? "": ", "));
+                if (isFriendly(gameBoard[y][x])) {
+                    teamQueenPositions.append(letters[y] + (x + 1) + " ");
+                }
+                else if(!isEmpty(y, x) && !isFriendly(gameBoard[y][x]) && gameBoard[y][x] != ARROW){
+                    enemyQueenPositions.append(letters[y] + (x + 1) + " ");
+                }
             }
             boardToString.append("]\n");
         }
+
+        teamQueenPositions.append("]"); enemyQueenPositions.append("]");
+        boardToString.append(teamQueenPositions.toString() + "\n" + enemyQueenPositions.toString());
 
         return boardToString.toString().replace("10", "X");  
     }
@@ -181,11 +192,11 @@ public class Board {
         StringBuilder boardToString = new StringBuilder();
 
         // starting from the first column
-        for (int x = 0; x < BOARD_SIZE; x++) { 
+        for (int x = BOARD_SIZE - 1; x >= 0; x--) { 
             boardToString.append("[");
             // starting from the bottom row
-            for (int y = BOARD_SIZE - 1; y >= 0; y--) {  
-                boardToString.append(gameBoard[y][x] + (y == 0 ? "": ", "));
+            for (int y = 0; y < BOARD_SIZE; y++) { 
+                boardToString.append(gameBoard[y][x] + (y == BOARD_SIZE-1 ? "": ", "));
             }
             boardToString.append("]\n");
         }

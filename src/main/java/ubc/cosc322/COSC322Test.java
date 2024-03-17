@@ -120,12 +120,10 @@ public class COSC322Test extends GamePlayer{
             getGameGUI().updateGameState(msgDetails);
 
             Move opponentsMove = new Move(msgDetails);
-            System.out.println("Opponent's Move: " + opponentsMove.toString());
+            System.out.println("Opponent's Move: " + opponentsMove.toString() + "\nOpponent's Move: " + opponentsMove.toStringServer());
 
-            this.board = new Board(board, opponentsMove);
+            this.board.makeMove(opponentsMove, true);
             makeRandomMove();
-
-            System.out.println(msgDetails.get("queen-position-current"));
 
         } else if (messageType.equals(GameMessage.GAME_ACTION_START)) {
 
@@ -142,8 +140,10 @@ public class COSC322Test extends GamePlayer{
 
             System.out.println("Timer Started on Black");
 
-            if(this.color == BLACK)
+            if(this.color == BLACK){
                 makeRandomMove();
+                // makeSampleMove();
+            }
         }
 
     	return true;   	
@@ -172,19 +172,30 @@ public class COSC322Test extends GamePlayer{
     	gameClient = new GameClient(userName, passwd, this);			
 	}
 
-    public void makeRandomMove() {
+    private void makeRandomMove() {
 
 		ArrayList<Move> moves = MoveGenerator.getAllMoves(this.board, this.color);
 		Move randomMove = moves.get((int) (Math.random() * moves.size()));
         System.out.println("Random Move: " + randomMove.toString());
 
-		this.board = new Board(board, randomMove);
+		this.board.makeMove(randomMove);
 
         Move moveForServer = randomMove.getMoveForServer();
         ArrayList<Integer> currentPos = moveForServer.getOldPos(), newPos = moveForServer.getNewPos(), arrowPos = moveForServer.getArrowPos();
 
         getGameClient().sendMoveMessage(currentPos, newPos, arrowPos);
         getGameGUI().updateGameState(currentPos, newPos, arrowPos);
+    }
+
+    private void makeSampleMove() {
+        Move move = new Move(3,0,3,3,4,4);
+        this.board.makeMove(move);
+
+        Move moveForServer = move.getMoveForServer();
+        ArrayList<Integer> currentPos = moveForServer.getOldPos(), newPos = moveForServer.getNewPos(), arrowPos = moveForServer.getArrowPos();
+
+        gameClient.sendMoveMessage(currentPos, newPos, arrowPos);
+        gamegui.updateGameState(currentPos, newPos, arrowPos);
     }
  
 }//end of class

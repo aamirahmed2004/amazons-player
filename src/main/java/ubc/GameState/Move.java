@@ -73,14 +73,16 @@ public class Move {
         return letters[oldX] + oldY + "-" + letters[newX] + (newY) + "/" + letters[arrowX] + (arrowY);
     }
 
+    public String toStringServer() {
+        return "[" + oldPos.get(1) + ", " + oldPos.get(0) + "],[" + newPos.get(1) + ", " + newPos.get(0) + "],[" + arrowPos.get(1) + ", " + arrowPos.get(0) + "]";
+    }
+
     // Returns a move in the format that the server expects
     public Move getMoveForServer() {
-
         Move move = new Move(
                         oldPos.get(1) + 1, oldPos.get(0) + 1, 
                         newPos.get(1) + 1, newPos.get(0) + 1, 
                         arrowPos.get(1) + 1, arrowPos.get(0) + 1);
-
         return move;
     }
 }
