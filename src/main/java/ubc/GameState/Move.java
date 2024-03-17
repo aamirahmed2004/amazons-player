@@ -21,10 +21,9 @@ public class Move {
     @SuppressWarnings("unchecked")
     public Move(Map<String, Object> msgDetails) {
 
-        // Cloning the values to prevent the original map from being modified, since we need to convert to 0 indexing.
-        oldPos = (ArrayList<Integer>) ((ArrayList<Integer>) msgDetails.get(AmazonsGameMessage.QUEEN_POS_CURR)).clone();
-        newPos = (ArrayList<Integer>) ((ArrayList<Integer>) msgDetails.get(AmazonsGameMessage.QUEEN_POS_NEXT)).clone();
-        arrowPos = (ArrayList<Integer>) ((ArrayList<Integer>) msgDetails.get(AmazonsGameMessage.ARROW_POS)).clone();
+        oldPos = (ArrayList<Integer>) msgDetails.get(AmazonsGameMessage.QUEEN_POS_CURR);
+        newPos = (ArrayList<Integer>) msgDetails.get(AmazonsGameMessage.QUEEN_POS_NEXT);
+        arrowPos = (ArrayList<Integer>) msgDetails.get(AmazonsGameMessage.ARROW_POS);
 
         int oldX = oldPos.get(1);
         int oldY = oldPos.get(0);
@@ -42,7 +41,7 @@ public class Move {
     }
 
     // Internal constructor
-    Move(int oldX, int oldY, int newX, int newY, int arrowX, int arrowY) {
+    public Move(int oldX, int oldY, int newX, int newY, int arrowX, int arrowY) {
         oldPos = new ArrayList<>(Arrays.asList(oldX, oldY));
         newPos = new ArrayList<>(Arrays.asList(newX, newY));
         arrowPos = new ArrayList<>(Arrays.asList(arrowX, arrowY));
@@ -75,14 +74,12 @@ public class Move {
     }
 
     // Returns a move in the format that the server expects
-    public ArrayList<ArrayList<Integer>> sendMoveToServer() {
+    public Move getMoveForServer() {
 
-        ArrayList<ArrayList<Integer>> move = new ArrayList<>();
-
-        // NOTE: The server expects the coordinates to be 1-indexed (y,x) values
-        move.add(new ArrayList<>(Arrays.asList(oldPos.get(1) + 1, oldPos.get(0) + 1)));
-        move.add(new ArrayList<>(Arrays.asList(newPos.get(1) + 1, newPos.get(0) + 1)));
-        move.add(new ArrayList<>(Arrays.asList(arrowPos.get(1) + 1, arrowPos.get(0) + 1)));
+        Move move = new Move(
+                        oldPos.get(1) + 1, oldPos.get(0) + 1, 
+                        newPos.get(1) + 1, newPos.get(0) + 1, 
+                        arrowPos.get(1) + 1, arrowPos.get(0) + 1);
 
         return move;
     }

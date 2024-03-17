@@ -2,12 +2,12 @@ package ubc.GameState;
 
 import java.util.Arrays;
 
-public class Board implements Cloneable {
+public class Board {
 
-    private final int EMPTY = 0, WHITE = 1, BLACK = 2, ARROW = 3;
+    public final int EMPTY = 0, WHITE = 1, BLACK = 2, ARROW = 3, BOARD_SIZE = 10;
 
     // Assuming starting position is always the same, as below (white always starts at the bottom)
-    private int[][] board = {
+    private int[][] gameBoard = {
         {0,0,0,2,0,0,2,0,0,0},
         {0,0,0,0,0,0,0,0,0,0},
         {0,0,0,0,0,0,0,0,0,0},
@@ -37,18 +37,18 @@ public class Board implements Cloneable {
         int friendlyQueensIndex = 0, enemyQueensIndex = 0;
 
         // Iterate through the board:
-        for(int i = 0; i < 10; i++){
-            for(int j = 0; j < 10; j++){
+        for(int i = 0; i < BOARD_SIZE; i++){
+            for(int j = 0; j < BOARD_SIZE; j++){
 
                 // If the square has a black queen
-                if(this.board[i][j] == BLACK){
+                if(this.gameBoard[i][j] == BLACK){
                     if(playerIsBlack)
                         friendlyQueens[friendlyQueensIndex++] = new int[]{i,j};
                     else enemyQueens[enemyQueensIndex++] = new int[]{i,j}; 
                 }
                 
                 // If the square has a white queen
-                else if(this.board[i][j] == WHITE){
+                else if(this.gameBoard[i][j] == WHITE){
                     if(playerIsBlack)
                         enemyQueens[enemyQueensIndex++] = new int[]{i,j};
                     else friendlyQueens[friendlyQueensIndex++] = new int[]{i,j};
@@ -57,66 +57,79 @@ public class Board implements Cloneable {
         }
 
         if(debugMode)
-            System.out.println("Team queens: " + friendlyQueens + "\nEnemy queens: " + enemyQueens);
+            System.out.println("Team queens: " + Arrays.deepToString(friendlyQueens) + "\nEnemy queens: " + Arrays.deepToString(enemyQueens));
     }
 
-    // Constructor used to create a new board from an existing board + a move
-    public Board(Board Board, Move move) {
-        try {
+    // Constructor used to create a new board from the existing board + a move
+    public Board(Board oldBoard, Move move) {
+        
+        if(debugMode)
+            System.out.println("Before move: \n" + toString());
 
-            if(debugMode)
-                System.out.println("Before move: \n" + toString());
+        this.gameBoard = oldBoard.gameBoard;
+        this.friendlyQueens = oldBoard.friendlyQueens;
+        this.enemyQueens = oldBoard.enemyQueens;
 
-            Board cloned = (Board) Board.clone();
-            board = cloned.board;
-            friendlyQueens = cloned.friendlyQueens;
-            enemyQueens = cloned.enemyQueens;
+        int newX = move.getNewPos().get(0);
+        int newY = move.getNewPos().get(1);
+        int oldX = move.getOldPos().get(0);
+        int oldY = move.getOldPos().get(1);
 
-            int newX = move.getNewPos().get(0);
-            int newY = move.getNewPos().get(1);
-            int oldX = move.getOldPos().get(0);
-            int oldY = move.getOldPos().get(1);
+        // Get value of the queen that is to be moved
+        int current = gameBoard[oldX][oldY];
 
-            // Get value of the queen that is to be moved
-            int movingQueen = board[oldX][oldY];
+        // Update the board
+        gameBoard[newX][newY] = current;
+        gameBoard[oldX][oldY] = EMPTY;
+        gameBoard[move.getArrowPos().get(0)][move.getArrowPos().get(1)] = ARROW;
 
-            // Update the board
-            board[newX][newY] = movingQueen;
-            board[oldX][oldY] = EMPTY;
-            board[move.getArrowPos().get(0)][move.getArrowPos().get(1)] = ARROW;
+        // Update the queen that moved
+        if (isFriendly(current)) {
 
-            // Update the queen that moved
-            if (isFriendly(movingQueen)) {
-
-                // Check existing friendly queens to find which one has the same starting position
-                for (int i = 0; i < friendlyQueens.length; i++) {
-                    if (friendlyQueens[i][0] == oldX && friendlyQueens[i][1] == oldY) {
-                        friendlyQueens[i] = new int[]{newX, newY};
-                        break;
-                    }
-                }
-            } else {
-
-                // Check existing enemy queens to find which one has the same starting position
-                for (int i = 0; i < enemyQueens.length; i++) {
-                    if (enemyQueens[i][0] == oldX && enemyQueens[i][1] == oldY) {
-                        enemyQueens[i] = new int[]{newX, newY};
-                        break;
-                    }
+            // Check existing friendly queens to find which one has the same starting position
+            for (int i = 0; i < friendlyQueens.length; i++) {
+                if (friendlyQueens[i][0] == oldX && friendlyQueens[i][1] == oldY) {
+                    friendlyQueens[i] = new int[]{newX, newY};
+                    break;
                 }
             }
+        } else {
 
-            if(debugMode)
-                System.out.println("--------------------------------------\nAfter move: \n" + toString());
-
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(e);
+            // Check existing enemy queens to find which one has the same starting position
+            for (int i = 0; i < enemyQueens.length; i++) {
+                if (enemyQueens[i][0] == oldX && enemyQueens[i][1] == oldY) {
+                    enemyQueens[i] = new int[]{newX, newY};
+                    break;
+                }
+            }
         }
+
+        if(debugMode)
+            System.out.println("--------------------------------------\nAfter move: \n" + toString());
     }
 
     // Function used to check if a piece is friendly
-    public boolean isFriendly(int pieceValue){
-        return isBlack ? pieceValue == BLACK : pieceValue == WHITE;
+    public boolean isFriendly(int color){
+        return isBlack ? color == BLACK : color == WHITE;
+    }
+
+    // Function to check if a square is empty
+    public boolean isEmpty(int row, int col){
+        return gameBoard[row][col] == EMPTY;
+    }
+
+    public boolean moveQueenOnGameBoard(int[] queen, int[] square){
+
+        int oldX = queen[0], oldY = queen[1], newX = square[0], newY = square[1];
+
+        if (!isEmpty(newX, newY) || isEmpty(oldX, oldY) || getPos(oldX, oldY) == ARROW) return false;
+        
+        int color = getPos(oldX, oldY);
+        this.gameBoard[oldX][oldY] = EMPTY;
+        this.gameBoard[newX][newY] = color;  
+
+        return true;
+        
     }
 
     public int[][] getFriendlyQueens() {
@@ -128,23 +141,17 @@ public class Board implements Cloneable {
     }
 
     public int getPos(int row, int col) {
-        return board[row][col];
+        return gameBoard[row][col];
     }
 
     public boolean isBlack() {
         return isBlack;
     }
 
-    public Object clone() throws CloneNotSupportedException {
-        Board clone = (Board) super.clone();
-        clone.board = this.board.clone();
-        return clone;
-    }
-
     @Override
     public String toString() {
         // we use deepToString since board is a 2D array
-        return Arrays.deepToString(board)
+        return Arrays.deepToString(gameBoard)
                         .replace("[[", "[").replace("]]", "]") //remove the extra brackets at the start and end
                         .replace("], ", "]\n") //since it is a 2D array, replace the comma and space with a newline
                         .replace("2", "B").replace("1", "W").replace("3", "X");  //replace the numbers with letters

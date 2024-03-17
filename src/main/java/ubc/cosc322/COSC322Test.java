@@ -2,19 +2,17 @@
 package ubc.cosc322;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import sfs2x.client.entities.Room;
+import ubc.GameState.Board;
+import ubc.GameState.Move;
+import ubc.GameState.MoveGenerator;
 import ygraph.ai.smartfox.games.BaseGameGUI;
-import ygraph.ai.smartfox.games.BoardGameModel;
 import ygraph.ai.smartfox.games.GameClient;
 import ygraph.ai.smartfox.games.GameMessage;
-import ygraph.ai.smartfox.games.GameModel;
 import ygraph.ai.smartfox.games.GamePlayer;
-import ygraph.ai.smartfox.games.Amazon.GameBoard;
-import ygraph.ai.smartfox.games.amazons.AmazonsGameMessage;
 import ygraph.ai.smartfox.games.amazons.HumanPlayer;
 
 /**
@@ -25,20 +23,17 @@ import ygraph.ai.smartfox.games.amazons.HumanPlayer;
  */
 public class COSC322Test extends GamePlayer{
 
-    private GameClient gameClient = null; 
-    private BaseGameGUI gamegui = null;
-	
-    private BoardGameModel board = null;
-    private GameMessage msg = null;
-    // private Amazon amazon = null;
-    private GameBoard boardgame = null;
-    
-    private GameModel gameModel = null;
+    public final int EMPTY = 0, WHITE = 1, BLACK = 2, ARROW = 3, BOARD_SIZE = 10;
 
-    // private ArrayList<Integer> gameState = new ArrayList<Integer>(100);
+    private GameClient gameClient; 
+    private BaseGameGUI gameGUI;
 
-    public Board gameBoard = new Board();
+    private String userName;
+    private String passwd;
 	
+    private Board board;
+	
+    private int color;
     /**
      * The main method
      * @param args for name and passwd (current, any string would work)
@@ -74,7 +69,7 @@ public class COSC322Test extends GamePlayer{
     	
     	//To make a GUI-based player, create an instance of BaseGameGUI
     	//and implement the method getGameGUI() accordingly
-    	this.gamegui = new BaseGameGUI(this);
+    	this.gameGUI = new BaseGameGUI(this);
     }
  
 
@@ -97,8 +92,8 @@ public class COSC322Test extends GamePlayer{
         gameClient.joinRoom(roomToJoin);
 
         userName = gameClient.getUserName();
-        if(gamegui != null){
-            gamegui.setRoomInformation(gameClient.getRoomList());
+        if(gameGUI != null){
+            gameGUI.setRoomInformation(gameClient.getRoomList());
         }
 
     }
@@ -115,36 +110,34 @@ public class COSC322Test extends GamePlayer{
 
         if (messageType.equals(GameMessage.GAME_STATE_BOARD)) {
 
-            gamegui.setGameState((ArrayList<Integer>) msgDetails.get("game-state"));
-            // gameBoard.printBoard();
-
-        } else if (messageType.equals(GameMessage.GAME_ACTION_MOVE)) {
-
-            gamegui.updateGameState(msgDetails);
-            System.out.println("Game State: " + msgDetails.get("player-black"));
-            // System.out.println(msgDetails.get("queen-position-current"));
+            gameGUI.setGameState((ArrayList<Integer>) msgDetails.get("game-state"));
+            System.out.println("Game State: " + msgDetails.get("game-state"));
 
         } else if (messageType.equals(GameMessage.GAME_ACTION_START)) {
-
-            if(this.userName().equals(msgDetails.get("player-black"))){
-                gameBoard.setUp(true);
-            } else if(this.userName().equals(msgDetails.get("player-white"))){
-                gameBoard.setUp(false);
-            }
 
             System.out.println("Game Start: Black Played by " + msgDetails.get("player-black"));
             System.out.println("Game Start: White Played by " + msgDetails.get("player-white"));
 
+            if(this.userName().equals(msgDetails.get("player-black"))){
+                board = new Board(true);
+                this.color = BLACK;
+            } else if(this.userName().equals(msgDetails.get("player-white"))){
+                board = new Board(false);
+                this.color = WHITE;
+            }
+
             System.out.println("Timer Started on Black");
-            // ArrayList<Integer> currentPos = new ArrayList<>(Arrays.asList(1,4));
-            // ArrayList<Integer> newPos = new ArrayList<>(Arrays.asList(4,4));
-            // ArrayList<Integer> arrowPos = new ArrayList<>(Arrays.asList(5,5));
-            // gameClient.sendMoveMessage(currentPos, newPos, arrowPos);
-            // gamegui.updateGameState(currentPos, newPos, arrowPos);
-        }
+            makeRandomMove();
+
+        } else if (messageType.equals(GameMessage.GAME_ACTION_MOVE)) {
+
+            gameGUI.updateGameState(msgDetails);
+            Move opponentsMove = new Move(msgDetails);
+            this.board = new Board(board, opponentsMove);
+            makeRandomMove();
+        } 
     	return true;   	
     }
-    
     
     @Override
     public String userName() {
@@ -160,7 +153,7 @@ public class COSC322Test extends GamePlayer{
 	@Override
 	public BaseGameGUI getGameGUI() {
 		// TODO Auto-generated method stub
-		return this.gamegui;
+		return this.gameGUI;
 	}
 
 	@Override
@@ -169,15 +162,19 @@ public class COSC322Test extends GamePlayer{
     	gameClient = new GameClient(userName, passwd, this);			
 	}
 
-    public void makeMove() {
+    public void makeRandomMove() {
 
-        //Make ArrayList of current position of 8 queens, {r1,r2,r3,r4,c1,c2,c3,c4}, pick random number from 1-4 for queen, then pick a random direction 1-3 for direction, then choose coordinates in that direction. Arrow goes to queen's old position. 
+		ArrayList<Move> moves = MoveGenerator.getAllMoves(this.board, this.color);
+		Move randomMove = moves.get((int) (Math.random() * moves.size()));
+        System.out.println("Random Move: " + randomMove.toString());
+        
+		this.board = new Board(board, randomMove);
 
-        System.out.println("Making Move");
-        ArrayList<Integer> currentPos = new ArrayList<>(Arrays.asList(1,4));
-        ArrayList<Integer> newPos = new ArrayList<>(Arrays.asList(4,4));
-        ArrayList<Integer> arrowPos = new ArrayList<>(Arrays.asList(5,5));
+        Move moveForServer = randomMove.getMoveForServer();
+        ArrayList<Integer> currentPos = moveForServer.getOldPos(), newPos = moveForServer.getNewPos(), arrowPos = moveForServer.getArrowPos();
+
         gameClient.sendMoveMessage(currentPos, newPos, arrowPos);
+        gameGUI.updateGameState(currentPos, newPos, arrowPos);
     }
  
 }//end of class
