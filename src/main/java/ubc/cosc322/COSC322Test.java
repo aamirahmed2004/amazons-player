@@ -2,7 +2,6 @@
 package ubc.cosc322;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -187,6 +186,7 @@ public class COSC322Test extends GamePlayer{
         getGameGUI().updateGameState(currentPos, newPos, arrowPos);
     }
 
+    @SuppressWarnings("unused")
     private void makeSampleMove() {
         Move move = new Move(3,0,3,3,4,4);
         this.board.makeMove(move);

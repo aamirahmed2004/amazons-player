@@ -5,7 +5,7 @@ public class Board {
     public final int EMPTY = 0, WHITE = 1, BLACK = 2, ARROW = 3, BOARD_SIZE = 10;
 
     // Assuming starting position is always the same, as below (white always starts at the bottom, which translates to the right side of the 2D array)
-    private int[][] gameBoard = {
+    private byte[][] gameBoard = {
         {0,0,0,1,0,0,2,0,0,0},
         {0,0,0,0,0,0,0,0,0,0},
         {0,0,0,0,0,0,0,0,0,0},
@@ -82,7 +82,7 @@ public class Board {
         int arrowY = move.getArrowPos().get(1);
 
         // Get value of the queen that is to be moved
-        int current = gameBoard[oldX][oldY];
+        byte current = gameBoard[oldX][oldY];
 
         // Update the board : NEEDS FIXING
         gameBoard[newX][newY] = current;
@@ -130,7 +130,7 @@ public class Board {
 
         if (!isEmpty(newX, newY) || isEmpty(oldX, oldY) || getPos(oldX, oldY) == ARROW) return false;
         
-        int color = getPos(oldX, oldY);
+        byte color = getPos(oldX, oldY);
         this.gameBoard[oldX][oldY] = EMPTY;
         this.gameBoard[newX][newY] = color;  
 
@@ -146,7 +146,7 @@ public class Board {
         return this.enemyQueens;
     }
 
-    public int getPos(int row, int col) {
+    public byte getPos(int row, int col) {
         return gameBoard[row][col];
     }
 
