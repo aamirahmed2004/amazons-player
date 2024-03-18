@@ -67,7 +67,7 @@ public class MoveGenerator {
         * Algorithm: 
         * 
         * for every move along a particular direction:
-        *    if next square is empty, stop
+        *    if next square is occupied, stop
         *    else, add square to list
         *
         * repeat for all 8 directions
@@ -120,6 +120,55 @@ public class MoveGenerator {
 			if (!board.isEmpty(row - i, col + i)) break;
 			moveList.add(new ArrayList<Integer>(Arrays.asList(row - i, col + i)));
 		}
+
+		return moveList;
+	}
+
+	public static ArrayList<ArrayList<Integer>> getChessKingMovesFromSquare(int[] square, Board board) {
+
+        ArrayList<ArrayList<Integer>> moveList = new ArrayList<ArrayList<Integer>>();
+		int row = square[0], col = square[1];
+
+        /*
+        * Algorithm: 
+        * 
+        * for each of the 8 directions
+        *    if next square in that direction is empty
+        *    	add square to list
+        */
+
+        // Right
+		if (row + 1 < board.BOARD_SIZE && board.isEmpty(row + 1, col)) 
+			moveList.add(new ArrayList<Integer>(Arrays.asList(row + 1, col)));
+
+        // Left
+		if (row - 1 >= 0 && board.isEmpty(row - 1, col)) 
+			moveList.add(new ArrayList<Integer>(Arrays.asList(row - 1, col)));
+
+        // Up
+		if (col + 1 < board.BOARD_SIZE && board.isEmpty(row, col + 1)) 
+			moveList.add(new ArrayList<Integer>(Arrays.asList(row, col + 1)));
+
+        // Down
+		if (col - 1 >= 0 && board.isEmpty(row, col - 1)) 
+			moveList.add(new ArrayList<Integer>(Arrays.asList(row, col - 1)));
+
+        // Up right
+        if (row + 1 < board.BOARD_SIZE && col + 1 < board.BOARD_SIZE && board.isEmpty(row + 1, col + 1))
+			moveList.add(new ArrayList<Integer>(Arrays.asList(row + 1, col + 1)));
+
+
+        // Down left
+        if (row - 1 >= 0 && col - 1 >= 0 && board.isEmpty(row - 1, col - 1))
+			moveList.add(new ArrayList<Integer>(Arrays.asList(row - 1, col - 1)));
+
+        // Down right
+		if (row + 1 < board.BOARD_SIZE && col - 1 >= 0 && board.isEmpty(row + 1, col - 1))
+			moveList.add(new ArrayList<Integer>(Arrays.asList(row + 1, col - 1)));
+
+		// Up left
+		if (row - 1 >= 0 && col + 1 < board.BOARD_SIZE && board.isEmpty(row + 1, col - 1))
+			moveList.add(new ArrayList<Integer>(Arrays.asList(row + 1, col - 1)));
 
 		return moveList;
 	}

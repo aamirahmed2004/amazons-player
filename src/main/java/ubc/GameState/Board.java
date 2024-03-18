@@ -2,7 +2,7 @@ package ubc.GameState;
 
 public class Board {
 
-    public final int EMPTY = 0, WHITE = 1, BLACK = 2, ARROW = 3, BOARD_SIZE = 10;
+    public final byte EMPTY = 0, WHITE = 1, BLACK = 2, ARROW = 3, BOARD_SIZE = 10;
 
     // Assuming starting position is always the same, as below (white always starts at the bottom, which translates to the right side of the 2D array)
     private byte[][] gameBoard = {
@@ -164,10 +164,10 @@ public class Board {
         teamQueenPositions.append("Team queens: [");
         enemyQueenPositions.append("Enemy queens: [");
 
-        // starting from the first column
+        // starting from the last column
         for (int x = BOARD_SIZE - 1; x >= 0; x--) { 
             boardToString.append("[");
-            // starting from the bottom row
+            // starting from the first row
             for (int y = 0; y < BOARD_SIZE; y++) {    
                 boardToString.append(letters[y] + (x + 1) + (y == BOARD_SIZE-1 ? "": ", "));
                 if (isFriendly(gameBoard[y][x])) {
