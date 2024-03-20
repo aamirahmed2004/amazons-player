@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class Heuristics {
 
-    public byte[][][] getQueenDistancesForEveryTile(Board board, int[][] friendlyQueens, int[][] enemyQueens){
+    public static byte[][][] getQueenDistancesForEveryTile(Board board, int[][] friendlyQueens, int[][] enemyQueens){
 
         byte[][][] queenDistances = new byte[10][10][2];
 
@@ -32,4 +32,8 @@ public class Heuristics {
 
         return queenDistances;
     } 
+
+    public static int simpleEval(Board board){
+        return (MoveGenerator.getAllMoves(board, Board.BLACK).size() - MoveGenerator.getAllMoves(board, Board.WHITE).size());
+    }
 }

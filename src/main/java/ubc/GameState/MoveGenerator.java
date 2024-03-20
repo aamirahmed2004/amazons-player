@@ -26,7 +26,7 @@ public class MoveGenerator {
                 // Temporarily move the queen on the board (but not internally in the queens array), to find arrow moves from new queen position, then move it back
 				board.moveQueenOnGameBoard(currentQueen, possibleQueenPosition);    
 				ArrayList<ArrayList<Integer>> possibleArrowPositions = getArrowMovesFromSquare(possibleQueenPosition, board);
-				board.moveQueenOnGameBoard(possibleQueenPosition, currentQueen);
+				board.moveQueenOnGameBoard(possibleQueenPosition, currentQueen);	// move queen back
 
                 // For every square that the queen can shoot an arrow to (i.e. runs on average ~20 times), add the move to moveList
 				for (int k = 0; k < possibleArrowPositions.size(); k++) {
@@ -74,7 +74,7 @@ public class MoveGenerator {
         */
 
         // Right
-		for (int i = 1; row + i < board.BOARD_SIZE; i++) {    
+		for (int i = 1; row + i < Board.BOARD_SIZE; i++) {    
 			if (!board.isEmpty(row + i, col)) break;
             moveList.add(new ArrayList<Integer>(Arrays.asList(row + i, col)));
 		}
@@ -86,7 +86,7 @@ public class MoveGenerator {
 		}
 
         // Up
-		for (int i = 1; col + i < board.BOARD_SIZE; i++) {
+		for (int i = 1; col + i < Board.BOARD_SIZE; i++) {
 			if (!board.isEmpty(row, col + i)) break;
 			moveList.add(new ArrayList<Integer>(Arrays.asList(row, col + i)));
 		}
@@ -98,7 +98,7 @@ public class MoveGenerator {
 		}
 
         // Up right
-        for (int i = 1; row + i < board.BOARD_SIZE && col + i < board.BOARD_SIZE; i++) {
+        for (int i = 1; row + i < Board.BOARD_SIZE && col + i < Board.BOARD_SIZE; i++) {
 			if (!board.isEmpty(row + i, col + i)) break;
 			moveList.add(new ArrayList<Integer>(Arrays.asList(row + i, col + i)));
 		}
@@ -110,13 +110,13 @@ public class MoveGenerator {
 		}
 
         // Down right
-		for (int i = 1; row + i < board.BOARD_SIZE && col - i >= 0; i++) {
+		for (int i = 1; row + i < Board.BOARD_SIZE && col - i >= 0; i++) {
 			if (!board.isEmpty(row + i, col - i)) break;
 			moveList.add(new ArrayList<Integer>(Arrays.asList(row + i, col - i)));
 		}
 
 		// Up left
-		for (int i = 1; row - i >= 0 && col + i < board.BOARD_SIZE; i++) {
+		for (int i = 1; row - i >= 0 && col + i < Board.BOARD_SIZE; i++) {
 			if (!board.isEmpty(row - i, col + i)) break;
 			moveList.add(new ArrayList<Integer>(Arrays.asList(row - i, col + i)));
 		}
@@ -138,7 +138,7 @@ public class MoveGenerator {
         */
 
         // Right
-		if (row + 1 < board.BOARD_SIZE && board.isEmpty(row + 1, col)) 
+		if (row + 1 < Board.BOARD_SIZE && board.isEmpty(row + 1, col)) 
 			moveList.add(new ArrayList<Integer>(Arrays.asList(row + 1, col)));
 
         // Left
@@ -146,7 +146,7 @@ public class MoveGenerator {
 			moveList.add(new ArrayList<Integer>(Arrays.asList(row - 1, col)));
 
         // Up
-		if (col + 1 < board.BOARD_SIZE && board.isEmpty(row, col + 1)) 
+		if (col + 1 < Board.BOARD_SIZE && board.isEmpty(row, col + 1)) 
 			moveList.add(new ArrayList<Integer>(Arrays.asList(row, col + 1)));
 
         // Down
@@ -154,7 +154,7 @@ public class MoveGenerator {
 			moveList.add(new ArrayList<Integer>(Arrays.asList(row, col - 1)));
 
         // Up right
-        if (row + 1 < board.BOARD_SIZE && col + 1 < board.BOARD_SIZE && board.isEmpty(row + 1, col + 1))
+        if (row + 1 < Board.BOARD_SIZE && col + 1 < Board.BOARD_SIZE && board.isEmpty(row + 1, col + 1))
 			moveList.add(new ArrayList<Integer>(Arrays.asList(row + 1, col + 1)));
 
 
@@ -163,11 +163,11 @@ public class MoveGenerator {
 			moveList.add(new ArrayList<Integer>(Arrays.asList(row - 1, col - 1)));
 
         // Down right
-		if (row + 1 < board.BOARD_SIZE && col - 1 >= 0 && board.isEmpty(row + 1, col - 1))
+		if (row + 1 < Board.BOARD_SIZE && col - 1 >= 0 && board.isEmpty(row + 1, col - 1))
 			moveList.add(new ArrayList<Integer>(Arrays.asList(row + 1, col - 1)));
 
 		// Up left
-		if (row - 1 >= 0 && col + 1 < board.BOARD_SIZE && board.isEmpty(row + 1, col - 1))
+		if (row - 1 >= 0 && col + 1 < Board.BOARD_SIZE && board.isEmpty(row + 1, col - 1))
 			moveList.add(new ArrayList<Integer>(Arrays.asList(row + 1, col - 1)));
 
 		return moveList;

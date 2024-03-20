@@ -9,6 +9,7 @@ import sfs2x.client.entities.Room;
 import ubc.GameState.Board;
 import ubc.GameState.Move;
 import ubc.GameState.MoveGenerator;
+import ubc.GameTree.Minimax;
 import ygraph.ai.smartfox.games.BaseGameGUI;
 import ygraph.ai.smartfox.games.GameClient;
 import ygraph.ai.smartfox.games.GameMessage;
@@ -33,7 +34,7 @@ public class COSC322Test extends GamePlayer{
 	
     private Board board;
 	
-    private int color;
+    private int player;
     /**
      * The main method
      * @param args for name and passwd (current, any string would work)
@@ -122,16 +123,17 @@ public class COSC322Test extends GamePlayer{
             System.out.println("Opponent's Move: " + opponentsMove.toString() + "\nOpponent's Move: " + opponentsMove.toStringServer());
 
             this.board.makeMove(opponentsMove, true);
-            makeRandomMove();
+            // makeRandomMove();
+            makeAIMove();
 
         } else if (messageType.equals(GameMessage.GAME_ACTION_START)) {
 
             if(this.userName().equals(msgDetails.get("player-black"))){
                 board = new Board(true);
-                this.color = BLACK;
+                this.player = BLACK;
             } else if(this.userName().equals(msgDetails.get("player-white"))){
                 board = new Board(false);
-                this.color = WHITE;
+                this.player = WHITE;
             }
 
             System.out.println("Game Start: Black Played by " + msgDetails.get("player-black"));
@@ -139,7 +141,7 @@ public class COSC322Test extends GamePlayer{
 
             System.out.println("Timer Started on Black");
 
-            if(this.color == BLACK){
+            if(this.player == BLACK){
                 makeRandomMove();
                 // makeSampleMove();
             }
@@ -171,9 +173,29 @@ public class COSC322Test extends GamePlayer{
     	gameClient = new GameClient(userName, passwd, this);			
 	}
 
+    private void makeAIMove(){
+
+        Move bestMove = Minimax.minimaxTree(board, this.player, 2);
+
+        this.board.makeMove(bestMove);
+
+        Move moveForServer = bestMove.getMoveForServer();
+        ArrayList<Integer> currentPos = moveForServer.getOldPos(), newPos = moveForServer.getNewPos(), arrowPos = moveForServer.getArrowPos();
+
+        getGameClient().sendMoveMessage(currentPos, newPos, arrowPos);
+        getGameGUI().updateGameState(currentPos, newPos, arrowPos);
+
+    }
+
     private void makeRandomMove() {
 
-		ArrayList<Move> moves = MoveGenerator.getAllMoves(this.board, this.color);
+		ArrayList<Move> moves = MoveGenerator.getAllMoves(this.board, this.player);
+
+        if(moves.size() == 0){
+            System.out.println("Nah I'd win (we did not win)");
+            return;
+        }
+
 		Move randomMove = moves.get((int) (Math.random() * moves.size()));
         System.out.println("Random Move: " + randomMove.toString());
 

@@ -1,8 +1,8 @@
 package ubc.GameState;
 
-public class Board {
+public class Board implements Cloneable {
 
-    public final byte EMPTY = 0, WHITE = 1, BLACK = 2, ARROW = 3, BOARD_SIZE = 10;
+    public static final byte EMPTY = 0, WHITE = 1, BLACK = 2, ARROW = 3, BOARD_SIZE = 10;
 
     // Assuming starting position is always the same, as below (white always starts at the bottom, which translates to the right side of the 2D array)
     private byte[][] gameBoard = {
@@ -16,9 +16,7 @@ public class Board {
         {0,0,0,0,0,0,0,0,0,0},
         {0,0,0,0,0,0,0,0,0,0},
         {0,0,0,1,0,0,2,0,0,0},
-    };      // gameBoard[BOARD_SIZE-1][0], gameBoard[BOARD_SIZE-2][0].... gameBoard[BOARD_SIZE-10][0]
-            // gameBoard[BOARD_SIZE-1][1], gameBoard[BOARD_SIZE-2][1].... gameBoard[BOARD_SIZE-10][1]
-
+    };     
 
     private boolean isBlack;
 
@@ -26,11 +24,12 @@ public class Board {
     private int[][] friendlyQueens;
     private int[][] enemyQueens;
 
-    public boolean debugMode = true;
+    public boolean debugMode;
 
     // Constructor used when we receive game-state-board message to create a new board from the game state 
     public Board(boolean playerIsBlack) {
         
+        this.debugMode = true;
         this.friendlyQueens = new int[4][2];
         this.enemyQueens = new int[4][2];
         this.isBlack = playerIsBlack;
@@ -61,15 +60,36 @@ public class Board {
         //     System.out.println("Team queens: " + Arrays.deepToString(friendlyQueens) + "\nEnemy queens: " + Arrays.deepToString(enemyQueens));
     }
 
+    // Used to create a new board from an old board + a move (it is now the other player's turn so board.isBlack must be inverted)
+    public static Board getNewBoard(Board oldBoard, Move move){
+
+        Board newBoard = (Board) oldBoard.clone();
+        newBoard.isBlack = !oldBoard.isBlack();
+        newBoard.friendlyQueens = oldBoard.enemyQueens;
+        newBoard.enemyQueens = oldBoard.friendlyQueens;
+        newBoard.makeMove(move);
+
+        return newBoard;
+    }
+
+    // Only used for cloning
+    public Board(){ 
+        this.gameBoard = new byte[BOARD_SIZE][BOARD_SIZE];
+        this.friendlyQueens = new int[4][2];
+        this.enemyQueens = new int[4][2];
+        this.isBlack = false;
+    }
+
     public void makeMove(Move move){
         makeMove(move, false);
     }
 
     // Constructor used to create a new board from the existing board + a move
+    // makeMove(move, true) is only used when receiving opponent's move from game-action-move message 
     public void makeMove(Move move, boolean opponentsMove) {
 
         if(debugMode){
-            System.out.println("Notation: \n" + notationToString());
+            // System.out.println("Notation: \n" + notationToString());
             System.out.println("----------------------------------------");
             System.out.println("Before move: \n" + toString());
         }
@@ -84,7 +104,7 @@ public class Board {
         // Get value of the queen that is to be moved
         byte current = gameBoard[oldX][oldY];
 
-        // Update the board : NEEDS FIXING
+        // Update the board 
         gameBoard[newX][newY] = current;
         gameBoard[oldX][oldY] = EMPTY;
         gameBoard[arrowX][arrowY] = ARROW;
@@ -99,8 +119,7 @@ public class Board {
                     break;
                 }
             }
-        } else {
-
+        } else if (!isFriendly(current)){
             // Check existing enemy queens to find which one has the same starting position
             for (int i = 0; i < enemyQueens.length; i++) {
                 if (enemyQueens[i][0] == oldX && enemyQueens[i][1] == oldY) {
@@ -108,10 +127,32 @@ public class Board {
                     break;
                 }
             }
-        }
+        } 
 
         if(debugMode)
             System.out.println("--------------------------------------\nAfter move: \n" + toString());
+    }
+
+    public Object clone(){
+
+        Board clone = new Board();
+        clone.isBlack = this.isBlack;
+
+        // Iterate through the board:
+        for(int i = 0; i < BOARD_SIZE; i++){
+            for(int j = 0; j < BOARD_SIZE; j++){
+                clone.gameBoard[i][j] = this.gameBoard[i][j];
+            }
+        }
+
+        for(int i = 0; i < this.friendlyQueens.length; i++){
+            for(int j = 0; j < this.friendlyQueens[i].length; j++){
+                clone.friendlyQueens[i][j] = this.friendlyQueens[i][j];
+                clone.enemyQueens[i][j] = this.enemyQueens[i][j];
+            }
+        }
+
+        return clone;
     }
 
     // Function used to check if a piece is friendly
@@ -124,6 +165,7 @@ public class Board {
         return gameBoard[row][col] == EMPTY;
     }
 
+    // Function used to temporarily move queen on board (only for move generation, internal queen positions not updated)
     public boolean moveQueenOnGameBoard(int[] queen, int[] square){
 
         int oldX = queen[0], oldY = queen[1], newX = square[0], newY = square[1];
@@ -135,7 +177,6 @@ public class Board {
         this.gameBoard[newX][newY] = color;  
 
         return true;
-        
     }
 
     public int[][] getFriendlyQueens() {
@@ -154,6 +195,9 @@ public class Board {
         return isBlack;
     }
 
+
+    /*  Don't need this method anymore
+     
     public String notationToString(){
 
         StringBuilder boardToString = new StringBuilder();
@@ -186,15 +230,17 @@ public class Board {
         return boardToString.toString().replace("10", "X");  
     }
 
+    */
+
     @Override
     public String toString() {
         
         StringBuilder boardToString = new StringBuilder();
 
-        // starting from the first column
+
         for (int x = BOARD_SIZE - 1; x >= 0; x--) { 
             boardToString.append("[");
-            // starting from the bottom row
+
             for (int y = 0; y < BOARD_SIZE; y++) { 
                 boardToString.append(gameBoard[y][x] + (y == BOARD_SIZE-1 ? "": ", "));
             }
