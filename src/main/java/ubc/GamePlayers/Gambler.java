@@ -1,5 +1,5 @@
 
-package ubc.cosc322;
+package ubc.GamePlayers;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +22,7 @@ import ygraph.ai.smartfox.games.amazons.HumanPlayer;
  * Jan 5, 2021
  *
  */
-public class COSC322Test extends GamePlayer{
+public class Gambler extends GamePlayer{
 
     public final int EMPTY = 0, WHITE = 1, BLACK = 2, ARROW = 3, BOARD_SIZE = 10;
 
@@ -35,36 +35,14 @@ public class COSC322Test extends GamePlayer{
     private Board board;
 	
     private int player;
-    /**
-     * The main method
-     * @param args for name and passwd (current, any string would work)
-     */
-    public static void main(String[] args) {				 
-    	COSC322Test player1 = new COSC322Test("Jarvis", args[1]);
+    private int moveCount;
 
-        HumanPlayer player2 = new HumanPlayer();
-    	
-    	if(player1.getGameGUI() == null || player2.getGameGUI() == null) {
-    		player1.Go();
-            player2.Go();
-    	}
-    	else {
-    		BaseGameGUI.sys_setup();
-            java.awt.EventQueue.invokeLater(new Runnable() {
-                public void run() {
-                	player1.Go();
-                    player2.Go();
-                }
-            });
-    	}
-    }
-	
     /**
      * Any name and passwd 
      * @param userName
       * @param passwd
      */
-    public COSC322Test(String userName, String passwd) {
+    public Gambler(String userName, String passwd) {
     	this.userName = userName;
     	this.passwd = passwd;
     	
@@ -88,7 +66,7 @@ public class COSC322Test extends GamePlayer{
         //     System.out.println("No rooms available right now!");
         // }
 
-        String roomToJoin = rooms.get(rooms.size()-1).getName();
+        String roomToJoin = rooms.get(rooms.size()-2).getName();
         System.out.println("Joining Room: " + roomToJoin);
         gameClient.joinRoom(roomToJoin);
 
@@ -118,21 +96,25 @@ public class COSC322Test extends GamePlayer{
         } else if (messageType.equals(GameMessage.GAME_ACTION_MOVE)) {
 
             getGameGUI().updateGameState(msgDetails);
+            moveCount++;
 
             Move opponentsMove = new Move(msgDetails);
-            System.out.println("Opponent's Move: " + opponentsMove.toString() + "\nOpponent's Move: " + opponentsMove.toStringServer());
+            System.out.println("Opponent's Move: " + opponentsMove.toString());
 
             this.board.makeMove(opponentsMove, true);
-            // makeRandomMove();
-            makeAIMove();
+
+            makeRandomMove();
+            // makeAIMove();
+            
+            moveCount++;
 
         } else if (messageType.equals(GameMessage.GAME_ACTION_START)) {
 
             if(this.userName().equals(msgDetails.get("player-black"))){
-                board = new Board(true);
+                board = new Board(true); board.debugMode = false;
                 this.player = BLACK;
             } else if(this.userName().equals(msgDetails.get("player-white"))){
-                board = new Board(false);
+                board = new Board(false); board.debugMode = false;
                 this.player = WHITE;
             }
 
@@ -145,6 +127,7 @@ public class COSC322Test extends GamePlayer{
                 makeRandomMove();
                 // makeSampleMove();
             }
+            moveCount++;
         }
 
     	return true;   	
@@ -175,7 +158,24 @@ public class COSC322Test extends GamePlayer{
 
     private void makeAIMove(){
 
-        Move bestMove = Minimax.minimaxTree(board, this.player, 2);
+        int depth = 1;
+
+        // if(moveCount >= 1 && moveCount <= 15)
+        //     depth = 1;
+        // else if(moveCount >= 16 && moveCount <= 40)
+        //     depth = 2;
+        // else 
+        //     depth = 3;
+
+        Move bestMove = Minimax.minimaxTree(board, this.player, depth);
+
+        if(bestMove == null){
+            System.out.println("----------------------------------");
+            System.out.println("Nah I'd win (we lost)");
+            System.out.println("----------------------------------");
+            return;
+        }
+        System.out.println("Best move: " + bestMove.toString());
 
         this.board.makeMove(bestMove);
 
@@ -192,7 +192,7 @@ public class COSC322Test extends GamePlayer{
 		ArrayList<Move> moves = MoveGenerator.getAllMoves(this.board, this.player);
 
         if(moves.size() == 0){
-            System.out.println("Nah I'd win (we did not win)");
+            System.out.println("1 billion on red");
             return;
         }
 

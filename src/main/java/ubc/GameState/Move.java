@@ -46,6 +46,30 @@ public class Move {
         arrowPos = new ArrayList<>(Arrays.asList(arrowX, arrowY));
     }
 
+    public Move(String moveString) {
+        String[] parts = moveString.split("-");
+        String[] newPosParts = parts[1].split("/");
+        
+        String oldPosStr = parts[0];
+        String newPosStr = newPosParts[0];
+        String arrowPosStr = newPosParts[1];
+
+        // Extract x and y coordinates from the strings
+        int oldX = oldPosStr.charAt(0) - 'a';
+        int oldY = Integer.parseInt(oldPosStr.substring(1)) - 1;
+
+        int newX = newPosStr.charAt(0) - 'a';
+        int newY = Integer.parseInt(newPosStr.substring(1)) - 1;
+
+        int arrowX = arrowPosStr.charAt(0) - 'a';
+        int arrowY = Integer.parseInt(arrowPosStr.substring(1)) - 1;
+
+        // Initialize the Move object
+        this.oldPos = new ArrayList<>(Arrays.asList(oldX, oldY));
+        this.newPos = new ArrayList<>(Arrays.asList(newX, newY));
+        this.arrowPos = new ArrayList<>(Arrays.asList(arrowX, arrowY));
+    }
+
     public ArrayList<Integer> getOldPos() {
         return oldPos;
     }

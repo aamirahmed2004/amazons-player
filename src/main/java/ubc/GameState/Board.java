@@ -1,5 +1,7 @@
 package ubc.GameState;
 
+import java.util.Arrays;
+
 public class Board implements Cloneable {
 
     public static final byte EMPTY = 0, WHITE = 1, BLACK = 2, ARROW = 3, BOARD_SIZE = 10;
@@ -63,10 +65,11 @@ public class Board implements Cloneable {
     // Used to create a new board from an old board + a move (it is now the other player's turn so board.isBlack must be inverted)
     public static Board getNewBoard(Board oldBoard, Move move){
 
-        Board newBoard = (Board) oldBoard.clone();
-        newBoard.isBlack = !oldBoard.isBlack();
-        newBoard.friendlyQueens = oldBoard.enemyQueens;
-        newBoard.enemyQueens = oldBoard.friendlyQueens;
+        Board newBoard = new Board();
+        Board copy = (Board) oldBoard.clone();
+        newBoard.isBlack = !copy.isBlack();
+        newBoard.friendlyQueens = copy.enemyQueens;
+        newBoard.enemyQueens = copy.friendlyQueens;
         newBoard.makeMove(move);
 
         return newBoard;
@@ -89,7 +92,7 @@ public class Board implements Cloneable {
     public void makeMove(Move move, boolean opponentsMove) {
 
         if(debugMode){
-            // System.out.println("Notation: \n" + notationToString());
+            System.out.println(notationToString());
             System.out.println("----------------------------------------");
             System.out.println("Before move: \n" + toString());
         }
@@ -129,8 +132,15 @@ public class Board implements Cloneable {
             }
         } 
 
-        if(debugMode)
+        if(debugMode){
             System.out.println("--------------------------------------\nAfter move: \n" + toString());
+            System.out.println(notationToString());
+        }
+    }
+
+    private void printQueens() {
+        System.out.println("Friendly queens: " + Arrays.deepToString(friendlyQueens));
+        System.out.println("Enemy queens: " + Arrays.deepToString(enemyQueens));
     }
 
     public Object clone(){
@@ -196,24 +206,23 @@ public class Board implements Cloneable {
     }
 
 
-    /*  Don't need this method anymore
-     
+    //  Don't need this method anymore
     public String notationToString(){
 
         StringBuilder boardToString = new StringBuilder();
         StringBuilder teamQueenPositions = new StringBuilder();
         StringBuilder enemyQueenPositions = new StringBuilder();
 
+        boardToString.append("");
+
         String[] letters = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
         teamQueenPositions.append("Team queens: [");
         enemyQueenPositions.append("Enemy queens: [");
 
-        // starting from the last column
         for (int x = BOARD_SIZE - 1; x >= 0; x--) { 
-            boardToString.append("[");
-            // starting from the first row
+            // boardToString.append("[");
             for (int y = 0; y < BOARD_SIZE; y++) {    
-                boardToString.append(letters[y] + (x + 1) + (y == BOARD_SIZE-1 ? "": ", "));
+                // boardToString.append(letters[y] + (x + 1) + (y == BOARD_SIZE-1 ? "": ", "));
                 if (isFriendly(gameBoard[y][x])) {
                     teamQueenPositions.append(letters[y] + (x + 1) + " ");
                 }
@@ -221,7 +230,7 @@ public class Board implements Cloneable {
                     enemyQueenPositions.append(letters[y] + (x + 1) + " ");
                 }
             }
-            boardToString.append("]\n");
+            // boardToString.append("]\n");
         }
 
         teamQueenPositions.append("]"); enemyQueenPositions.append("]");
@@ -229,8 +238,6 @@ public class Board implements Cloneable {
 
         return boardToString.toString().replace("10", "X");  
     }
-
-    */
 
     @Override
     public String toString() {

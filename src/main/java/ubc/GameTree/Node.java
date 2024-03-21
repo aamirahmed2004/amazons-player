@@ -12,6 +12,7 @@ public class Node {
     private Board board;
     private Move move;
     private int evaluation;
+    private int currentPlayer;
 
     private Node parent;                    
     private Node root;      
@@ -23,58 +24,23 @@ public class Node {
     public Node(Board previousBoard, Move move, Node parent, Node root) {
 
         this.board = Board.getNewBoard(previousBoard, move);
-        int currentPlayer = this.board.isBlack() ? Board.BLACK : Board.WHITE;
-
+        this.currentPlayer = this.board.isBlack() ? Board.BLACK : Board.WHITE;
+        // System.out.println(currentPlayer);
         this.root = root;
         this.move = move;
         
         this.parent = parent;
-
-        //generate all possible moves for current player
-        this.possibleMoves = MoveGenerator.getAllMoves(this.board, currentPlayer); 
-    
-        if(possibleMoves.size() == 0){
-
-            this.isTerminalState = true;
-            
-            if(currentPlayer == Board.WHITE)        
-                this.evaluation = Integer.MAX_VALUE;    //if white to move and no moves left, then black wins (i.e. highest possible evaluation)
-            else this.evaluation = Integer.MIN_VALUE;   //if black to move and no moves left, then white wins (i.e. lowest possible evaluation)
-
-        } else {
-
-            this.children = new ArrayList<Node>();
-
-            for(Move possibleMove: possibleMoves){
-                addChild(new Node(this.board,possibleMove,this,this.root));
-            }
-        }
-            
+  
     }
 
     // Constructor for root node
     public Node(Board board, int color){ 
 
         this.board = board;
-        this.possibleMoves = MoveGenerator.getAllMoves(board, board.isBlack() ? Board.BLACK : Board.WHITE);
+        this.currentPlayer = this.board.isBlack() ? Board.BLACK : Board.WHITE;
         this.root = this;
         this.parent = null;
         this.move = null;
-
-        if(possibleMoves.size() == 0){
-
-            this.isTerminalState = true;
-
-            if(!board.isBlack())        
-                this.evaluation = Integer.MAX_VALUE;    //if white to move and no moves left, then black wins (i.e. highest possible evaluation)
-            else this.evaluation = Integer.MIN_VALUE;   //if black to move and no moves left, then white wins (i.e. lowest possible evaluation)
-
-        } else{
-            this.children = new ArrayList<Node>();
-            for(Move possibleMove: possibleMoves){
-                addChild(new Node(this.board,possibleMove,this,this.root));     //currently adds children of children of children... without stopping. Add depth attribute?
-            }
-        }
         
     }
 
@@ -99,6 +65,28 @@ public class Node {
     }
 
     public ArrayList<Node> getChildren() {
+
+        //generate all possible moves for current player
+        this.possibleMoves = MoveGenerator.getAllMoves(this.board, currentPlayer); 
+    
+        if(possibleMoves.size() == 0){
+
+            this.isTerminalState = true;
+            
+            if(this.currentPlayer == Board.WHITE)        
+                this.evaluation = Integer.MAX_VALUE;    //if white to move and no moves left, then black wins (i.e. highest possible evaluation)
+            else this.evaluation = Integer.MIN_VALUE;   //if black to move and no moves left, then white wins (i.e. lowest possible evaluation)
+            return null;
+            
+        } else {
+
+            this.children = new ArrayList<Node>();
+
+            for(Move possibleMove: possibleMoves){
+                addChild(new Node(this.board,possibleMove,this,this.root));
+            }
+        }
+
         return children;
     }
 

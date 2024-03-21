@@ -6,10 +6,27 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Jarvis_v1",
+            "request": "launch",
+            "mainClass": "ubc.GamePlayers.Jarvis_v1",
+            "projectName": "team-00"
+        },
+        {
+            "type": "java",
+            "name": "Jarvis_v1",
+            "request": "launch",
+            "mainClass": "ubc.cosc322.Jarvis_v1",
+            "projectName": "team-00"
+        },
+        {
+            "type": "java",
             "name": "Current File",
             "request": "launch",
             "mainClass": "${file}",
-            "args": ["cosc322", "cosc322"]
+            "args": [
+                "cosc322",
+                "cosc322"
+            ]
         },
         {
             "type": "java",
@@ -17,7 +34,10 @@
             "request": "launch",
             "mainClass": "ubc.cosc322.COSC322Test",
             "projectName": "team-00",
-            "args": ["cosc322", "cosc322"]
+            "args": [
+                "cosc322",
+                "cosc322"
+            ]
         }
     ]
 }
