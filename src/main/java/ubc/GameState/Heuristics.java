@@ -34,6 +34,11 @@ public class Heuristics {
     } 
 
     public static int simpleEval(Board board){
-        return (MoveGenerator.getAllMoves(board, Board.BLACK).size() - MoveGenerator.getAllMoves(board, Board.WHITE).size());
+
+        int eval = MoveGenerator.getAllMoves(board, Board.BLACK).size() - MoveGenerator.getAllMoves(board, Board.WHITE).size();
+        int perspective = (board.blackToMove()) ? 1 : -1;
+
+        // if black to move, return positive value when num moves for black > num moves for white
+        return eval * perspective;
     }
 }

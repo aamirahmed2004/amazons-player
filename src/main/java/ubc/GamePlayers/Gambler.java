@@ -51,8 +51,6 @@ public class Gambler extends GamePlayer{
     	this.gamegui = new BaseGameGUI(this);
     }
  
-
-
     @Override
     public void onLogin() {
     	// System.out.println("Congratualations!!! "
@@ -101,7 +99,7 @@ public class Gambler extends GamePlayer{
             Move opponentsMove = new Move(msgDetails);
             System.out.println("Opponent's Move: " + opponentsMove.toString());
 
-            this.board.makeMove(opponentsMove, true);
+            this.board.makeMove(opponentsMove);
 
             makeRandomMove();
             // makeAIMove();
@@ -155,37 +153,6 @@ public class Gambler extends GamePlayer{
 		// TODO Auto-generated method stub
     	gameClient = new GameClient(userName, passwd, this);			
 	}
-
-    private void makeAIMove(){
-
-        int depth = 1;
-
-        // if(moveCount >= 1 && moveCount <= 15)
-        //     depth = 1;
-        // else if(moveCount >= 16 && moveCount <= 40)
-        //     depth = 2;
-        // else 
-        //     depth = 3;
-
-        Move bestMove = Minimax.minimaxTree(board, this.player, depth);
-
-        if(bestMove == null){
-            System.out.println("----------------------------------");
-            System.out.println("Nah I'd win (we lost)");
-            System.out.println("----------------------------------");
-            return;
-        }
-        System.out.println("Best move: " + bestMove.toString());
-
-        this.board.makeMove(bestMove);
-
-        Move moveForServer = bestMove.getMoveForServer();
-        ArrayList<Integer> currentPos = moveForServer.getOldPos(), newPos = moveForServer.getNewPos(), arrowPos = moveForServer.getArrowPos();
-
-        getGameClient().sendMoveMessage(currentPos, newPos, arrowPos);
-        getGameGUI().updateGameState(currentPos, newPos, arrowPos);
-
-    }
 
     private void makeRandomMove() {
 

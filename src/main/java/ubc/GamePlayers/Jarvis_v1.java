@@ -45,7 +45,8 @@ public class Jarvis_v1 extends GamePlayer{
      */
     public static void main(String[] args) {				 
     	Jarvis_v1 player1 = new Jarvis_v1("Jarvis", "cosc322");
-        Gambler player2 = new Gambler("Ultron", "cosc322");
+        // Gambler player2 = new Gambler("Ultron", "cosc322");
+        HumanPlayer player2 = new HumanPlayer();
     	
     	if(player1.getGameGUI() == null) {
     		player1.Go();
@@ -57,7 +58,7 @@ public class Jarvis_v1 extends GamePlayer{
             java.awt.EventQueue.invokeLater(new Runnable() {
                 public void run() {
                 	player1.Go();
-                    // player2.Go();
+                    player2.Go();
                 }
             });
     	}
@@ -85,7 +86,7 @@ public class Jarvis_v1 extends GamePlayer{
     	// System.out.println("The next step is to find a room and join it: "
     	// 		+ "the gameClient instance created in my constructor knows how!"); 		
 
-		List<Room>  rooms = gameClient.getRoomList();
+		List<Room> rooms = gameClient.getRoomList();
 
         // if(rooms.isEmpty()){
         //     System.out.println("No rooms available right now!");
@@ -127,13 +128,10 @@ public class Jarvis_v1 extends GamePlayer{
             System.out.println("Opponent's Move: " + opponentsMove.toString());
             gameRecord.append(opponentsMove.toString() + " ");
 
-            this.board.makeMove(opponentsMove, true);
+            this.board.makeMove(opponentsMove);
 
-            Random random = new Random();
-            // double randomNumber = random.nextDouble();
-
-            // 50% of the time, play random move
-            makeRandomMove();
+            // makeRandomMove();
+            makeAIMove();
             moveCount++;
 
         } else if (messageType.equals(GameMessage.GAME_ACTION_START)) {
@@ -186,24 +184,29 @@ public class Jarvis_v1 extends GamePlayer{
 
     private void makeAIMove(){
 
-        int depth = 1;
+        int depth = 0;
 
-        // if(moveCount >= 1 && moveCount <= 15)
-        //     depth = 1;
-        // else if(moveCount >= 16 && moveCount <= 50)
-        //     depth = 2;
-        // else 
-        //     depth = 3;
+        if(moveCount >= 0 && moveCount <= 15)
+            depth = 1;
+        else if(moveCount >= 16 && moveCount <= 50)
+            depth = 2;
+        else 
+            depth = 3;
 
-        Move bestMove = Minimax.minimaxTree(board, this.player, depth);
-
-        if(bestMove == null){
+        Minimax minimax = new Minimax(board);
+        System.out.println("test");
+        int evaluation = minimax.minimaxEvaluation(2);
+        Move bestMove = minimax.getBestMove();
+        
+        if(bestMove.isNull()){
             System.out.println("----------------------------------");
             System.out.println("Nah I'd win (we lost)");
             System.out.println("----------------------------------");
             return;
         }
-        System.out.println("Best move: " + bestMove.toString());
+
+        System.out.println("\n\nNumber of static evaluations: " + minimax.numStaticEvaluations);
+        System.out.println("Best move found: " + bestMove.toString());
         gameRecord.append(bestMove.toString() + " ");
 
         this.board.makeMove(bestMove);
@@ -218,7 +221,7 @@ public class Jarvis_v1 extends GamePlayer{
 
     private void makeRandomMove() {
 
-		ArrayList<Move> moves = MoveGenerator.getAllMoves(this.board, this.player);
+		ArrayList<Move> moves = MoveGenerator.getAllMoves(this.board);
 
         if(moves.size() == 0){
             System.out.println("----------------------------------");
