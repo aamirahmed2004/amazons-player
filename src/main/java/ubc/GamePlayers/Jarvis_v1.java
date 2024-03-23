@@ -150,8 +150,8 @@ public class Jarvis_v1 extends GamePlayer{
             System.out.println("Timer Started on Black");
 
             if(this.player == BLACK){
-                makeRandomMove();
-                // makeSampleMove();
+                // makeRandomMove();
+                makeSampleMove();
             }
             moveCount++;
         }
@@ -186,16 +186,15 @@ public class Jarvis_v1 extends GamePlayer{
 
         int depth = 0;
 
-        if(moveCount >= 0 && moveCount <= 15)
-            depth = 1;
-        else if(moveCount >= 16 && moveCount <= 50)
+        if(moveCount >= 0 && moveCount <= 30)
             depth = 2;
-        else 
+        else if(moveCount >= 31 && moveCount <= 50)
             depth = 3;
 
-        Minimax minimax = new Minimax(board);
+        Board clone = (Board) this.board.clone();
+        Minimax minimax = new Minimax(clone);
         System.out.println("test");
-        int evaluation = minimax.minimaxEvaluation(2);
+        int evaluation = minimax.minimaxEvaluation(depth);
         Move bestMove = minimax.getBestMove();
         
         if(bestMove.isNull()){
@@ -205,7 +204,7 @@ public class Jarvis_v1 extends GamePlayer{
             return;
         }
 
-        System.out.println("\n\nNumber of static evaluations: " + minimax.numStaticEvaluations);
+        System.out.println("\n\nDepth: " + depth + "\nNumber of static evaluations: " + minimax.numStaticEvaluations);
         System.out.println("Best move found: " + bestMove.toString());
         gameRecord.append(bestMove.toString() + " ");
 
@@ -245,10 +244,13 @@ public class Jarvis_v1 extends GamePlayer{
 
     @SuppressWarnings("unused")
     private void makeSampleMove() {
-        Move move = new Move(3,0,3,3,4,4);
-        this.board.makeMove(move);
+        Move move1 = new Move(0,6,3,3,4,4);
+        Move move2 = new Move(3,9,3,3,4,4);
+        this.board.makeMove(move1);
+        this.board.unmakeMove(move1);
+        this.board.makeMove(move2);
 
-        Move moveForServer = move.getMoveForServer();
+        Move moveForServer = move2.getMoveForServer();
         ArrayList<Integer> currentPos = moveForServer.getOldPos(), newPos = moveForServer.getNewPos(), arrowPos = moveForServer.getArrowPos();
 
         gameClient.sendMoveMessage(currentPos, newPos, arrowPos);

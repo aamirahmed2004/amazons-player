@@ -131,9 +131,9 @@ public class Board implements Cloneable {
                 }
             }        
         } 
-        // else if (!inSearch) {
-        //     throw new IllegalArgumentException("Illegal move! " + (blackToMove ? "Black" : "White") + " tried moving their opponent's queen");
-        // }
+        else if (!inSearch) {
+            throw new IllegalArgumentException("Illegal move! " + (blackToMove ? "Black" : "White") + " tried moving their opponent's queen");
+        }
 
         // Once a move is made, it is the other player's turn
         invertPlayer();
