@@ -187,13 +187,13 @@ public class Jarvis_v1 extends GamePlayer{
         int depth = 0;
 
         if(moveCount >= 0 && moveCount <= 30)
-            depth = 2;
+            depth = 1;
         else if(moveCount >= 31 && moveCount <= 50)
             depth = 3;
 
         Board clone = (Board) this.board.clone();
-        Minimax minimax = new Minimax(clone);
-        System.out.println("test");
+        Minimax minimax = new Minimax(clone, moveCount);
+        System.out.println("Starting evaluation!");
         int evaluation = minimax.minimaxEvaluation(depth);
         Move bestMove = minimax.getBestMove();
         

@@ -3,24 +3,28 @@ package ubc.GameTree;
 import java.util.ArrayList;
 
 import ubc.GameState.Board;
-import ubc.GameState.Heuristics;
+import ubc.GameState.Evaluator;
 import ubc.GameState.Move;
 import ubc.GameState.MoveGenerator;
 
 public class Minimax {
 
+    private int numberOfMoves;
     private Move bestMove;
     private int bestEval;
     private boolean abortSearch;    
     private Board board;
+    private Evaluator evaluator;
 
     // To count the number of leaf nodes generated in the search
     public int numStaticEvaluations = 0;
 
-    public Minimax(Board board){
+    public Minimax(Board board, int numberOfMoves){
         this.board = board;
         this.bestEval = 0;
         this.bestMove = Move.nullMove();
+        this.evaluator = new Evaluator(board);
+        this.numberOfMoves = numberOfMoves;
     }
 
     /*
@@ -37,7 +41,7 @@ public class Minimax {
 
         if(depth == 0){
             numStaticEvaluations++;
-            return Heuristics.simpleEval(board);
+            return evaluator.simpleEval();
         }
 
         ArrayList<Move> moves = MoveGenerator.getAllMoves(board);
@@ -48,6 +52,7 @@ public class Minimax {
         for(Move move: moves){
             // Make move, find evaluation at depth = d-1, unmake move, then decide whether to prune.
             // ERROR: board is completely messed up after minimax returns. Probably an issue here.
+            // Update: temporary fix - passing a clone of the board to instantiate minimax
             board.makeMove(move,true);
             int eval = -(minimaxEvaluation(depth - 1, plyFromRoot + 1, -beta, -alpha));     
             board.unmakeMove(move);
