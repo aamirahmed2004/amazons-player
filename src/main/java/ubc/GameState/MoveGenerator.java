@@ -172,8 +172,8 @@ public class MoveGenerator {
 			moveList.add(new ArrayList<Integer>(Arrays.asList(row + 1, col - 1)));
 
 		// Up left
-		if (row - 1 >= 0 && col + 1 < Board.BOARD_SIZE && board.isEmpty(row + 1, col - 1))
-			moveList.add(new ArrayList<Integer>(Arrays.asList(row + 1, col - 1)));
+		if (row - 1 >= 0 && col + 1 < Board.BOARD_SIZE && board.isEmpty(row - 1, col + 1))
+			moveList.add(new ArrayList<Integer>(Arrays.asList(row - 1, col + 1)));
 
 		return moveList;
 	}

@@ -22,7 +22,7 @@ public class Evaluator {
         return eval * perspective;
     }
 
-    public double territoryEval(){
+    public int notSoSimpleEval(){
 
         int perspective = (board.blackToMove()) ? 1 : -1;
 
@@ -90,8 +90,10 @@ public class Evaluator {
         c2 = c2 * perspective;
 
         // TODO: implement functions f_1(w) through f_4(w) such that sigma f_i(w) = 1, f_1(0) = 1, and f_4(0) = 0. 
-        double eval = t1 + c1 + c2 + t2;
+        double t = f1(w)*t1 + w*t2;
+        double m = mobilityEval(w);
         
+        int eval = (int)(t+m);
         return eval;
     }
 
@@ -172,6 +174,9 @@ public class Evaluator {
 
                 for(ArrayList<Integer> move: possibleMoves){
                     int row = move.get(0), col = move.get(1);
+                    if(row == 10 || col == 10){
+                        System.out.println("hello");
+                    }
                     if(playerDistances[row][col] > currentDistance){
                         playerDistances[row][col] = currentDistance;
                         changesMade = true;
@@ -331,5 +336,9 @@ public class Evaluator {
      */
     private double f(double w, double alpha){
         return w / (50 * Math.pow(1.15, alpha));
+    }
+
+    private double f1(double w){
+        return (100-w)/100.0;
     }
 }

@@ -12,6 +12,7 @@ public class Move {
     private final ArrayList<Integer> oldPos;
     private final ArrayList<Integer> newPos;
     private final ArrayList<Integer> arrowPos;
+    public int preference;
 
     /**
      * Converts the map receive from the server to a move. 
