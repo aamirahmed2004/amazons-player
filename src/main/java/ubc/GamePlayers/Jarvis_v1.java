@@ -38,40 +38,21 @@ public class Jarvis_v1 extends GamePlayer{
     private int player;
     private int moveCount;
 
-    private StringBuilder gameRecord = new StringBuilder();
-    /**
-     * The main method
-     * @param args for name and passwd (current, any string would work)
-     */
-    public static void main(String[] args) {				 
-    	Jarvis_v1 player1 = new Jarvis_v1("Jarvis", "cosc322");
-        Gambler player2 = new Gambler("Ultron", "cosc322");
-    	
-    	if(player1.getGameGUI() == null) {
-    		player1.Go();
-            player2.Go();
-    	}
+    private int roomNumber;
+    private boolean debugMode;
 
-    	else {
-    		BaseGameGUI.sys_setup();
-            java.awt.EventQueue.invokeLater(new Runnable() {
-                public void run() {
-                	player1.Go();
-                    // player2.Go();
-                }
-            });
-    	}
-    }
+    private StringBuilder gameRecord = new StringBuilder();
 	
     /**
      * Any name and passwd 
      * @param userName
       * @param passwd
      */
-    public Jarvis_v1(String userName, String passwd) {
+    public Jarvis_v1(String userName, String passwd, int roomNumber, boolean debugMode) {
     	this.userName = userName;
     	this.passwd = passwd;
-    	
+    	this.roomNumber = roomNumber;
+        this.debugMode = debugMode;
     	//To make a GUI-based player, create an instance of BaseGameGUI
     	//and implement the method getGameGUI() accordingly
     	this.gamegui = new BaseGameGUI(this);
@@ -85,13 +66,13 @@ public class Jarvis_v1 extends GamePlayer{
     	// System.out.println("The next step is to find a room and join it: "
     	// 		+ "the gameClient instance created in my constructor knows how!"); 		
 
-		List<Room>  rooms = gameClient.getRoomList();
+		List<Room> rooms = gameClient.getRoomList();
 
         // if(rooms.isEmpty()){
         //     System.out.println("No rooms available right now!");
         // }
 
-        String roomToJoin = rooms.get(5).getName();
+        String roomToJoin = rooms.get(roomNumber).getName();
         System.out.println("Joining Room: " + roomToJoin);
         gameClient.joinRoom(roomToJoin);
 
@@ -127,25 +108,21 @@ public class Jarvis_v1 extends GamePlayer{
             System.out.println("Opponent's Move: " + opponentsMove.toString());
             gameRecord.append(opponentsMove.toString() + " ");
 
-            this.board.makeMove(opponentsMove, true);
+            this.board.makeMove(opponentsMove, true, false);
 
-            Random random = new Random();
-            // double randomNumber = random.nextDouble();
-
-            // 50% of the time, play random move
-            makeRandomMove();
+            // makeRandomMove();
+            makeAIMove();
             moveCount++;
 
         } else if (messageType.equals(GameMessage.GAME_ACTION_START)) {
 
-            if(this.userName().equals(msgDetails.get("player-black"))){
-                board = new Board(true);
-                this.player = BLACK;
-            } else if(this.userName().equals(msgDetails.get("player-white"))){
-                board = new Board(false);
-                this.player = WHITE;
-            }
+            board = new Board(true); board.debugMode = this.debugMode;
 
+            if(this.userName().equals(msgDetails.get("player-black")))
+                this.player = BLACK;
+            else if(this.userName().equals(msgDetails.get("player-white")))
+                this.player = WHITE;
+            
             System.out.println("Game Start: Black Played by " + msgDetails.get("player-black"));
             System.out.println("Game Start: White Played by " + msgDetails.get("player-white"));
 
@@ -187,23 +164,26 @@ public class Jarvis_v1 extends GamePlayer{
     private void makeAIMove(){
 
         int depth = 1;
+        if(moveCount >= 10 && moveCount <= 44)
+            depth = 2;
+        else if(moveCount >= 45 )
+            depth = 3;
 
-        // if(moveCount >= 1 && moveCount <= 15)
-        //     depth = 1;
-        // else if(moveCount >= 16 && moveCount <= 50)
-        //     depth = 2;
-        // else 
-        //     depth = 3;
-
-        Move bestMove = Minimax.minimaxTree(board, this.player, depth);
-
-        if(bestMove == null){
+        Board clone = (Board) this.board.clone();
+        Minimax minimax = new Minimax(clone, moveCount, 1);
+        System.out.println("Starting evaluation!");
+        int evaluation = minimax.minimaxEvaluation(depth);
+        Move bestMove = minimax.getBestMove();
+        
+        if(bestMove.isNull()){
             System.out.println("----------------------------------");
             System.out.println("Nah I'd win (we lost)");
             System.out.println("----------------------------------");
             return;
         }
-        System.out.println("Best move: " + bestMove.toString());
+
+        System.out.println("\n\nDepth: " + depth + "\nNumber of static evaluations: " + minimax.numStaticEvaluations);
+        System.out.println("Best move found: " + bestMove.toString());
         gameRecord.append(bestMove.toString() + " ");
 
         this.board.makeMove(bestMove);
@@ -218,7 +198,7 @@ public class Jarvis_v1 extends GamePlayer{
 
     private void makeRandomMove() {
 
-		ArrayList<Move> moves = MoveGenerator.getAllMoves(this.board, this.player);
+		ArrayList<Move> moves = MoveGenerator.getAllMoves(this.board);
 
         if(moves.size() == 0){
             System.out.println("----------------------------------");
@@ -242,10 +222,13 @@ public class Jarvis_v1 extends GamePlayer{
 
     @SuppressWarnings("unused")
     private void makeSampleMove() {
-        Move move = new Move(3,0,3,3,4,4);
-        this.board.makeMove(move);
+        Move move1 = new Move(0,6,3,3,4,4);
+        Move move2 = new Move(3,9,3,3,4,4);
+        this.board.makeMove(move1);
+        this.board.unmakeMove(move1);
+        this.board.makeMove(move2);
 
-        Move moveForServer = move.getMoveForServer();
+        Move moveForServer = move2.getMoveForServer();
         ArrayList<Integer> currentPos = moveForServer.getOldPos(), newPos = moveForServer.getNewPos(), arrowPos = moveForServer.getArrowPos();
 
         gameClient.sendMoveMessage(currentPos, newPos, arrowPos);

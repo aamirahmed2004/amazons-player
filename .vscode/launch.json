@@ -6,6 +6,20 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Main",
+            "request": "launch",
+            "mainClass": "ubc.GamePlayers.Main",
+            "projectName": "team-00"
+        },
+        {
+            "type": "java",
+            "name": "BoardTest",
+            "request": "launch",
+            "mainClass": "BoardTest",
+            "projectName": "team-00"
+        },
+        {
+            "type": "java",
             "name": "Jarvis_v1",
             "request": "launch",
             "mainClass": "ubc.GamePlayers.Jarvis_v1",

@@ -5,12 +5,17 @@ import java.util.Arrays;
 
 public class MoveGenerator {
 
+	public static ArrayList<Move> getAllMoves(Board board) {
+		int currentPlayer = board.blackToMove() ? Board.BLACK : Board.WHITE;
+		return getAllMoves(board, currentPlayer);
+	}
+
     // Returns a list of Moves, where each Move contains the old position, new position, and arrow position, as separate arraylists.
     public static ArrayList<Move> getAllMoves(Board board, int color) {
 	
 		ArrayList<Move> moveList = new ArrayList<Move>();
 
-        int[][] queens = (board.isFriendly(color)) ? board.getFriendlyQueens() : board.getEnemyQueens();
+        int[][] queens = (color == Board.BLACK) ? board.getBlackQueens() : board.getWhiteQueens();
 
         // For every queen (i.e. runs 4 times), find all the squares it can be moved to
 		for (int i = 0; i < queens.length; i++) {
@@ -167,8 +172,8 @@ public class MoveGenerator {
 			moveList.add(new ArrayList<Integer>(Arrays.asList(row + 1, col - 1)));
 
 		// Up left
-		if (row - 1 >= 0 && col + 1 < Board.BOARD_SIZE && board.isEmpty(row + 1, col - 1))
-			moveList.add(new ArrayList<Integer>(Arrays.asList(row + 1, col - 1)));
+		if (row - 1 >= 0 && col + 1 < Board.BOARD_SIZE && board.isEmpty(row - 1, col + 1))
+			moveList.add(new ArrayList<Integer>(Arrays.asList(row - 1, col + 1)));
 
 		return moveList;
 	}

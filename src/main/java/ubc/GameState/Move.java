@@ -12,6 +12,7 @@ public class Move {
     private final ArrayList<Integer> oldPos;
     private final ArrayList<Integer> newPos;
     private final ArrayList<Integer> arrowPos;
+    public int preference;
 
     /**
      * Converts the map receive from the server to a move. 
@@ -95,6 +96,14 @@ public class Move {
         int oldY = oldPos.get(1) + 1, newY = newPos.get(1) + 1, arrowY = arrowPos.get(1) + 1;   
 
         return letters[oldX] + oldY + "-" + letters[newX] + (newY) + "/" + letters[arrowX] + (arrowY);
+    }
+
+    public static Move nullMove(){
+        return new Move(0,0,0,0,0,0);
+    }
+
+    public boolean isNull(){
+        return this.toString().equals("a1-a1/a1");
     }
 
     public String toStringServer() {
