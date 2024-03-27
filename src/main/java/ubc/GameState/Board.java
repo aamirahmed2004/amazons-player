@@ -27,12 +27,11 @@ public class Board implements Cloneable {
     private int[][] blackQueens;
     private int[][] whiteQueens;
 
-    public boolean debugMode;
+    public boolean debugMode = false;
 
     // Constructor used when we receive game-state-board message to create a new board from the game state 
     public Board(boolean blackToMove) {
         
-        this.debugMode = true;
         this.blackQueens = new int[4][2];
         this.whiteQueens = new int[4][2];
         this.blackToMove = blackToMove;
@@ -45,33 +44,17 @@ public class Board implements Cloneable {
 
                 // If the square has a black queen
                 if(this.gameBoard[i][j] == BLACK){
-                    if(blackToMove)
-                        blackQueens[blackQueensIndex++] = new int[]{i,j};
-                    else whiteQueens[whiteQueensIndex++] = new int[]{i,j}; 
+                    blackQueens[blackQueensIndex++] = new int[]{i,j};
                 }
                 
                 // If the square has a white queen
                 else if(this.gameBoard[i][j] == WHITE){
-                    if(blackToMove)
-                        whiteQueens[whiteQueensIndex++] = new int[]{i,j};
-                    else blackQueens[blackQueensIndex++] = new int[]{i,j};
+                    whiteQueens[whiteQueensIndex++] = new int[]{i,j};
                 }
             }
         }
         // if(debugMode)
         //     System.out.println("Team queens: " + Arrays.deepToString(blackQueens) + "\nEnemy queens: " + Arrays.deepToString(whiteQueens));
-    }
-
-    // Used to create a new board from an old board + a move (it is now the other player's turn so board.blackToMove must be inverted)
-    public Board getNewBoard(Move move){
-
-        Board newBoard = new Board();
-        Board copy = (Board) this.clone();
-        newBoard.blackQueens = copy.blackQueens;
-        newBoard.whiteQueens = copy.whiteQueens;
-        newBoard.makeMove(move);
-
-        return newBoard;
     }
 
     // Only used for cloning
@@ -82,19 +65,54 @@ public class Board implements Cloneable {
         this.blackToMove = false;
     }
 
-    public void makeMove(Move move){
-        makeMove(move,false);
+    // Only used for testing
+    public Board(byte[][] sampleBoard){
+        this.gameBoard = sampleBoard;
+        this.blackQueens = new int[4][2];
+        this.whiteQueens = new int[4][2];
+        this.blackToMove = true;
+
+        int blackQueensIndex = 0, whiteQueensIndex = 0;
+
+        // Iterate through the board:
+        for(int i = 0; i < BOARD_SIZE; i++){
+            for(int j = 0; j < BOARD_SIZE; j++){
+
+                // If the square has a black queen
+                if(this.gameBoard[i][j] == BLACK){
+                    blackQueens[blackQueensIndex++] = new int[]{i,j};
+                }
+                
+                // If the square has a white queen
+                else if(this.gameBoard[i][j] == WHITE){
+                    whiteQueens[whiteQueensIndex++] = new int[]{i,j};
+                }
+            }
+        }
     }
-    public void makeMove(Move move, boolean inSearch) {
+
+    // Used to create a new board from an old board + a move (it is now the other player's turn so board.blackToMove must be inverted)
+    public Board getNewBoard(Move move){
+
+        Board newBoard = new Board();
+        Board copy = (Board) this.clone();
+        newBoard.blackQueens = copy.blackQueens;
+        newBoard.whiteQueens = copy.whiteQueens;
+        newBoard.blackToMove = copy.blackToMove;
+        newBoard.makeMove(move);
+
+        return newBoard;
+    }
+
+    public void makeMove(Move move){
+        makeMove(move,false,false);
+    }
+    public void makeMove(Move move, boolean opponentsMove, boolean inSearch) {
 
         if(debugMode && !inSearch){
             System.out.println((blackToMove() ? "\nBlack is moving.\n" : "White is moving.\n") + notationToString());
             System.out.println("----------------------------------------");
             System.out.println("Before move: \n" + toString());
-        }
-
-        if(inSearch){
-            int count = 0;
         }
         
         int newX = move.getNewPos().get(0);
@@ -105,16 +123,15 @@ public class Board implements Cloneable {
         int arrowY = move.getArrowPos().get(1);
 
         // Get value of the queen that is to be moved
-        byte current = gameBoard[oldX][oldY];
+        byte piece = gameBoard[oldX][oldY];
 
         // Update the board 
-        gameBoard[newX][newY] = current;
+        gameBoard[newX][newY] = piece;
         gameBoard[oldX][oldY] = EMPTY;
         gameBoard[arrowX][arrowY] = ARROW;
 
         // Update the queen that moved
-        if (blackToMove && isFriendly(current)) {
-
+        if (blackToMove && (isFriendly(piece) || opponentsMove)) {
             // Check existing black queens to find which one has the same starting position
             for (int i = 0; i < blackQueens.length; i++) {
                 if (blackQueens[i][0] == oldX && blackQueens[i][1] == oldY) {
@@ -122,7 +139,7 @@ public class Board implements Cloneable {
                     break;
                 }
             }
-        } else if (!blackToMove && isFriendly(current)){
+        } else if (!blackToMove && (isFriendly(piece) || opponentsMove)){
             // Check existing white queens to find which one has the same starting position
             for (int i = 0; i < whiteQueens.length; i++) {
                 if (whiteQueens[i][0] == oldX && whiteQueens[i][1] == oldY) {
@@ -147,9 +164,9 @@ public class Board implements Cloneable {
     // Undo a move that was made during search.
     public void unmakeMove(Move move){
         
-        // If move has already been played, then move.newPos contains the current position of the queen  
-        int currentX = move.getNewPos().get(0);
-        int currentY = move.getNewPos().get(1);
+        // If move has already been played, then move.newPos contains the piece position of the queen  
+        int pieceX = move.getNewPos().get(0);
+        int pieceY = move.getNewPos().get(1);
 
         // move.oldPos contains the location we must move it to
         int previousX = move.getOldPos().get(0);
@@ -160,10 +177,10 @@ public class Board implements Cloneable {
         int arrowY = move.getArrowPos().get(1);
 
         // Get value of the queen that is to be moved
-        byte queen = gameBoard[currentX][currentY];
+        byte queen = gameBoard[pieceX][pieceY];
 
         // Update the board 
-        gameBoard[currentX][currentY] = EMPTY;
+        gameBoard[pieceX][pieceY] = EMPTY;
         gameBoard[previousX][previousY] = queen;
         gameBoard[arrowX][arrowY] = EMPTY;
 
@@ -172,7 +189,7 @@ public class Board implements Cloneable {
 
             // Check existing black queens to find which one has the same starting position
             for (int i = 0; i < blackQueens.length; i++) {
-                if (blackQueens[i][0] == currentX && blackQueens[i][1] == currentY) {
+                if (blackQueens[i][0] == pieceX && blackQueens[i][1] == pieceY) {
                     blackQueens[i] = new int[]{previousX, previousY};
                     break;
                 }
@@ -181,7 +198,7 @@ public class Board implements Cloneable {
         } else {
             // Check existing white queens to find which one has the same starting position
             for (int i = 0; i < whiteQueens.length; i++) {
-                if (whiteQueens[i][0] == currentX && whiteQueens[i][1] == currentY) {
+                if (whiteQueens[i][0] == pieceX && whiteQueens[i][1] == pieceY) {
                     whiteQueens[i] = new int[]{previousX, previousY};
                     break;
                 }
@@ -224,7 +241,7 @@ public class Board implements Cloneable {
 
     // Function used to check if a piece is friendly
     public boolean isFriendly(int color){
-        return blackToMove ? color == BLACK : color == WHITE;
+        return blackToMove ? (color == BLACK) : (color == WHITE);
     }
 
     // Function to check if a square is empty

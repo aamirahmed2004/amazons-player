@@ -4,6 +4,7 @@ package ubc.GamePlayers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import sfs2x.client.entities.Room;
 import ubc.GameState.Board;
@@ -22,7 +23,7 @@ import ygraph.ai.smartfox.games.amazons.HumanPlayer;
  * Jan 5, 2021
  *
  */
-public class Gambler extends GamePlayer{
+public class Jarvis_v2 extends GamePlayer{
 
     public final int EMPTY = 0, WHITE = 1, BLACK = 2, ARROW = 3, BOARD_SIZE = 10;
 
@@ -40,12 +41,14 @@ public class Gambler extends GamePlayer{
     private int roomNumber;
     private boolean debugMode;
 
+    private StringBuilder gameRecord = new StringBuilder();
+	
     /**
      * Any name and passwd 
      * @param userName
       * @param passwd
      */
-    public Gambler(String userName, String passwd, int roomNumber, boolean debugMode) {
+    public Jarvis_v2(String userName, String passwd, int roomNumber, boolean debugMode) {
     	this.userName = userName;
     	this.passwd = passwd;
     	this.roomNumber = roomNumber;
@@ -54,7 +57,8 @@ public class Gambler extends GamePlayer{
     	//and implement the method getGameGUI() accordingly
     	this.gamegui = new BaseGameGUI(this);
     }
- 
+
+
     @Override
     public void onLogin() {
     	// System.out.println("Congratualations!!! "
@@ -62,7 +66,7 @@ public class Gambler extends GamePlayer{
     	// System.out.println("The next step is to find a room and join it: "
     	// 		+ "the gameClient instance created in my constructor knows how!"); 		
 
-		List<Room>  rooms = gameClient.getRoomList();
+		List<Room> rooms = gameClient.getRoomList();
 
         // if(rooms.isEmpty()){
         //     System.out.println("No rooms available right now!");
@@ -102,12 +106,12 @@ public class Gambler extends GamePlayer{
 
             Move opponentsMove = new Move(msgDetails);
             System.out.println("Opponent's Move: " + opponentsMove.toString());
+            gameRecord.append(opponentsMove.toString() + " ");
 
             this.board.makeMove(opponentsMove, true, false);
 
-            makeRandomMove();
-            // makeAIMove();
-            
+            // makeRandomMove();
+            makeAIMove();
             moveCount++;
 
         } else if (messageType.equals(GameMessage.GAME_ACTION_START)) {
@@ -157,17 +161,56 @@ public class Gambler extends GamePlayer{
     	gameClient = new GameClient(userName, passwd, this);			
 	}
 
+    private void makeAIMove(){
+
+        int depth = 1;
+        if(moveCount >= 10 && moveCount <= 44)
+            depth = 2;
+        else if(moveCount >= 45 )
+            depth = 3;
+
+        Board clone = (Board) this.board.clone();
+        Minimax minimax = new Minimax(clone, moveCount, 2);
+        System.out.println("Starting evaluation!");
+        int evaluation = minimax.minimaxEvaluation(depth);
+        Move bestMove = minimax.getBestMove();
+        
+        if(bestMove.isNull()){
+
+            System.out.println("----------------------------------");
+            System.out.println("I am that guy (I wasn't)");
+            System.out.println("----------------------------------");
+            return;
+        }
+
+        System.out.println("\n\nDepth: " + depth + "\nNumber of static evaluations: " + minimax.numStaticEvaluations);
+        System.out.println("Best move found: " + bestMove.toString());
+        gameRecord.append(bestMove.toString() + " ");
+
+        this.board.makeMove(bestMove);
+
+        Move moveForServer = bestMove.getMoveForServer();
+        ArrayList<Integer> currentPos = moveForServer.getOldPos(), newPos = moveForServer.getNewPos(), arrowPos = moveForServer.getArrowPos();
+
+        getGameClient().sendMoveMessage(currentPos, newPos, arrowPos);
+        getGameGUI().updateGameState(currentPos, newPos, arrowPos);
+
+    }
+
     private void makeRandomMove() {
 
-		ArrayList<Move> moves = MoveGenerator.getAllMoves(this.board, this.player);
+		ArrayList<Move> moves = MoveGenerator.getAllMoves(this.board);
 
         if(moves.size() == 0){
-            System.out.println("1 billion on red");
+            System.out.println("----------------------------------");
+            System.out.println("Nah I'd win (we lost)");
+            System.out.println("----------------------------------");
             return;
         }
 
 		Move randomMove = moves.get((int) (Math.random() * moves.size()));
         System.out.println("Random Move: " + randomMove.toString());
+        gameRecord.append(randomMove.toString() + " ");
 
 		this.board.makeMove(randomMove);
 
@@ -180,14 +223,36 @@ public class Gambler extends GamePlayer{
 
     @SuppressWarnings("unused")
     private void makeSampleMove() {
-        Move move = new Move(3,0,3,3,4,4);
-        this.board.makeMove(move);
+        Move move1 = new Move(0,6,3,3,4,4);
+        Move move2 = new Move(3,9,3,3,4,4);
+        this.board.makeMove(move1);
+        this.board.unmakeMove(move1);
+        this.board.makeMove(move2);
 
-        Move moveForServer = move.getMoveForServer();
+        Move moveForServer = move2.getMoveForServer();
         ArrayList<Integer> currentPos = moveForServer.getOldPos(), newPos = moveForServer.getNewPos(), arrowPos = moveForServer.getArrowPos();
 
         gameClient.sendMoveMessage(currentPos, newPos, arrowPos);
         gamegui.updateGameState(currentPos, newPos, arrowPos);
+    }
+
+    private boolean wasGameValid(){
+        
+        int startingPlayer = player;
+        Board board = (player == Board.BLACK) ? new Board(true) : new Board(false);
+        String[] moves = gameRecord.toString().split(" ");
+        boolean currentPlayerIsBlack = (player == Board.BLACK);
+
+        for(String moveString: moves){
+            Move play = new Move(moveString);  
+            ArrayList<Move> possibleMoves = MoveGenerator.getAllMoves(board, startingPlayer);
+            if(!possibleMoves.contains(play)){
+                return false;
+            }
+            currentPlayerIsBlack = !currentPlayerIsBlack;
+        }
+
+        return true;
     }
  
 }//end of class

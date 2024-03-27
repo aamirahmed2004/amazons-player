@@ -10,21 +10,40 @@ import ubc.GameState.MoveGenerator;
 public class Minimax {
 
     private int numberOfMoves;
+    private Move bestMoveThisIteration;
+    private int bestEvalThisIteration;
     private Move bestMove;
     private int bestEval;
     private boolean abortSearch;    
     private Board board;
+    private int mode;
     private Evaluator evaluator;
 
     // To count the number of leaf nodes generated in the search
     public int numStaticEvaluations = 0;
 
-    public Minimax(Board board, int numberOfMoves){
+    public Minimax(Board board, int numberOfMoves, int mode){
         this.board = board;
         this.bestEval = 0;
         this.bestMove = Move.nullMove();
         this.evaluator = new Evaluator(board);
         this.numberOfMoves = numberOfMoves;
+        this.mode = mode;
+    }
+
+    public int iterativeDeepening(int maxDepth){
+
+        Timer timer = new Timer(10000);
+        bestMoveThisIteration = Move.nullMove();
+        abortSearch = timer.sufficientTimeForNextMove();
+
+        for(int depth = 1; depth <= maxDepth; depth++){
+            minimaxEvaluation(depth);
+            if(abortSearch)
+                break;
+        }
+
+        return bestEval;
     }
 
     /*
@@ -41,7 +60,7 @@ public class Minimax {
 
         if(depth == 0){
             numStaticEvaluations++;
-            return evaluator.simpleEval();
+            return (mode == 1) ? evaluator.simpleEval() : evaluator.notSoSimpleEval(numberOfMoves);
         }
 
         ArrayList<Move> moves = MoveGenerator.getAllMoves(board);
@@ -53,11 +72,11 @@ public class Minimax {
             // Make move, find evaluation at depth = d-1, unmake move, then decide whether to prune.
             // ERROR: board is completely messed up after minimax returns. Probably an issue here.
             // Update: temporary fix - passing a clone of the board to instantiate minimax
-            board.makeMove(move,true);
+            board.makeMove(move,false,true);
             int eval = -(minimaxEvaluation(depth - 1, plyFromRoot + 1, -beta, -alpha));     
             board.unmakeMove(move);
 
-            if(eval > alpha){
+            if(eval >= alpha){
                 alpha = eval;
 
                 if(plyFromRoot == 0){

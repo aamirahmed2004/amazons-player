@@ -22,14 +22,14 @@ public class Evaluator {
         return eval * perspective;
     }
 
-    public int notSoSimpleEval(){
+    public int notSoSimpleEval(int numberOfMoves){
 
         int perspective = (board.blackToMove()) ? 1 : -1;
 
         // Start with evaluations that need queen distances
         double t1 = 0.0, c1 = 0.0, w = 0.0;
-        int[][] blackMinDistances_Queen = getPlayerMinDistances(Board.BLACK, QUEEN);
-        int[][] whiteMinDistances_Queen = getPlayerMinDistances(Board.WHITE, QUEEN);
+        int[][] blackMinDistances_Queen = getPlayerMinDistances(Board.BLACK, QUEEN,numberOfMoves);
+        int[][] whiteMinDistances_Queen = getPlayerMinDistances(Board.WHITE, QUEEN,numberOfMoves);
 
         // Compute the following sums for every empty square
         for(int i = 0; i < Board.BOARD_SIZE; i++){
@@ -90,7 +90,7 @@ public class Evaluator {
         c2 = c2 * perspective;
 
         // TODO: implement functions f_1(w) through f_4(w) such that sigma f_i(w) = 1, f_1(0) = 1, and f_4(0) = 0. 
-        double t = f1(w)*t1 + w*t2;
+        double t = f1(w)*t1 + f2(w)*c1 + f3(w)*c2 + f4(w)*t2;
         double m = mobilityEval(w);
         
         int eval = (int)(t+m);
@@ -174,9 +174,6 @@ public class Evaluator {
 
                 for(ArrayList<Integer> move: possibleMoves){
                     int row = move.get(0), col = move.get(1);
-                    if(row == 10 || col == 10){
-                        System.out.println("hello");
-                    }
                     if(playerDistances[row][col] > currentDistance){
                         playerDistances[row][col] = currentDistance;
                         changesMade = true;
@@ -340,5 +337,17 @@ public class Evaluator {
 
     private double f1(double w){
         return (100-w)/100.0;
+    }
+
+    private double f2(double w){
+        return w/400.0;
+    }
+
+    private double f3(double w){
+        return w/400.0;
+    }
+
+    private double f4(double w){
+        return w/200.0;
     }
 }

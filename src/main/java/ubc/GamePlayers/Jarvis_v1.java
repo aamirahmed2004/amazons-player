@@ -38,41 +38,21 @@ public class Jarvis_v1 extends GamePlayer{
     private int player;
     private int moveCount;
 
-    private StringBuilder gameRecord = new StringBuilder();
-    /**
-     * The main method
-     * @param args for name and passwd (current, any string would work)
-     */
-    public static void main(String[] args) {				 
-    	Jarvis_v1 player1 = new Jarvis_v1("Jarvis", "cosc322");
-        // Gambler player2 = new Gambler("Ultron", "cosc322");
-        HumanPlayer player2 = new HumanPlayer();
-    	
-    	if(player1.getGameGUI() == null) {
-    		player1.Go();
-            player2.Go();
-    	}
+    private int roomNumber;
+    private boolean debugMode;
 
-    	else {
-    		BaseGameGUI.sys_setup();
-            java.awt.EventQueue.invokeLater(new Runnable() {
-                public void run() {
-                	player1.Go();
-                    player2.Go();
-                }
-            });
-    	}
-    }
+    private StringBuilder gameRecord = new StringBuilder();
 	
     /**
      * Any name and passwd 
      * @param userName
       * @param passwd
      */
-    public Jarvis_v1(String userName, String passwd) {
+    public Jarvis_v1(String userName, String passwd, int roomNumber, boolean debugMode) {
     	this.userName = userName;
     	this.passwd = passwd;
-    	
+    	this.roomNumber = roomNumber;
+        this.debugMode = debugMode;
     	//To make a GUI-based player, create an instance of BaseGameGUI
     	//and implement the method getGameGUI() accordingly
     	this.gamegui = new BaseGameGUI(this);
@@ -92,7 +72,7 @@ public class Jarvis_v1 extends GamePlayer{
         //     System.out.println("No rooms available right now!");
         // }
 
-        String roomToJoin = rooms.get(5).getName();
+        String roomToJoin = rooms.get(roomNumber).getName();
         System.out.println("Joining Room: " + roomToJoin);
         gameClient.joinRoom(roomToJoin);
 
@@ -128,7 +108,7 @@ public class Jarvis_v1 extends GamePlayer{
             System.out.println("Opponent's Move: " + opponentsMove.toString());
             gameRecord.append(opponentsMove.toString() + " ");
 
-            this.board.makeMove(opponentsMove);
+            this.board.makeMove(opponentsMove, true, false);
 
             // makeRandomMove();
             makeAIMove();
@@ -136,22 +116,21 @@ public class Jarvis_v1 extends GamePlayer{
 
         } else if (messageType.equals(GameMessage.GAME_ACTION_START)) {
 
-            if(this.userName().equals(msgDetails.get("player-black"))){
-                board = new Board(true);
-                this.player = BLACK;
-            } else if(this.userName().equals(msgDetails.get("player-white"))){
-                board = new Board(false);
-                this.player = WHITE;
-            }
+            board = new Board(true); board.debugMode = this.debugMode;
 
+            if(this.userName().equals(msgDetails.get("player-black")))
+                this.player = BLACK;
+            else if(this.userName().equals(msgDetails.get("player-white")))
+                this.player = WHITE;
+            
             System.out.println("Game Start: Black Played by " + msgDetails.get("player-black"));
             System.out.println("Game Start: White Played by " + msgDetails.get("player-white"));
 
             System.out.println("Timer Started on Black");
 
             if(this.player == BLACK){
-                // makeRandomMove();
-                makeSampleMove();
+                makeRandomMove();
+                // makeSampleMove();
             }
             moveCount++;
         }
@@ -184,15 +163,14 @@ public class Jarvis_v1 extends GamePlayer{
 
     private void makeAIMove(){
 
-        int depth = 0;
-
-        if(moveCount >= 0 && moveCount <= 30)
-            depth = 1;
-        else if(moveCount >= 31 && moveCount <= 50)
+        int depth = 1;
+        if(moveCount >= 10 && moveCount <= 44)
+            depth = 2;
+        else if(moveCount >= 45 )
             depth = 3;
 
         Board clone = (Board) this.board.clone();
-        Minimax minimax = new Minimax(clone, moveCount);
+        Minimax minimax = new Minimax(clone, moveCount, 1);
         System.out.println("Starting evaluation!");
         int evaluation = minimax.minimaxEvaluation(depth);
         Move bestMove = minimax.getBestMove();
