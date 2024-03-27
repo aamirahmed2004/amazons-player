@@ -9,42 +9,69 @@ import ubc.GameState.MoveGenerator;
 
 public class Minimax {
 
+    // private final int MAX_DEPTH = 15;
+
     private int numberOfMoves;
-    private Move bestMoveThisIteration;
-    private int bestEvalThisIteration;
+
+    // private Move bestMoveThisIteration;
+    // private int bestEvalThisIteration;
     private Move bestMove;
     private int bestEval;
-    private boolean abortSearch;    
+
     private Board board;
+
     private int mode;
     private Evaluator evaluator;
 
+    public boolean searchCancelled = false;
+
     // To count the number of leaf nodes generated in the search
     public int numStaticEvaluations = 0;
+    public int depthReached = 0;
 
-    public Minimax(Board board, int numberOfMoves, int mode){
+    public int movesMade = 0;
+    public int movesUnmade = 0;
+
+    private long timeRemaining;
+
+    public Minimax(Board board, int numberOfMoves, int mode, long timeRemaining){
         this.board = board;
-        this.bestEval = 0;
-        this.bestMove = Move.nullMove();
         this.evaluator = new Evaluator(board);
         this.numberOfMoves = numberOfMoves;
         this.mode = mode;
+        this.timeRemaining = timeRemaining;
+        this.bestMove = Move.nullMove();
+        this.bestEval = 0;
     }
 
-    public int iterativeDeepening(int maxDepth){
+    /* 
+    Does not work right now 
+    public int iterativeDeepening(){
 
-        Timer timer = new Timer(10000);
-        bestMoveThisIteration = Move.nullMove();
-        abortSearch = timer.sufficientTimeForNextMove();
+        bestEvalThisIteration = bestEval = 0;
+		bestMoveThisIteration = bestMove = Move.nullMove();
 
-        for(int depth = 1; depth <= maxDepth; depth++){
+        Board newBoard = (Board) this.board.clone();
+
+        for(int depth = 1; depth <= MAX_DEPTH; depth++){
+
+            this.board = newBoard;
             minimaxEvaluation(depth);
-            if(abortSearch)
-                break;
-        }
+            System.out.println("Difference: " + (movesMade - movesUnmade));
+            movesMade = 0; movesUnmade = 0;
 
+            if(searchCancelled){
+                depthReached = depth - 1;
+                break;
+            } else{
+                bestMove = bestMoveThisIteration;
+                bestEval = bestEvalThisIteration;
+            }      
+        }
         return bestEval;
     }
+    */ 
+    
 
     /*
      * Using a variant of minimax called NegaMax modified by alpha-beta pruning
@@ -58,9 +85,17 @@ public class Minimax {
      */
     public int minimaxEvaluation(int depth, int plyFromRoot, int alpha, int beta){
 
+        if(timeRemaining <= 500){
+            searchCancelled = true;
+            return 0;
+        }
+
         if(depth == 0){
             numStaticEvaluations++;
-            return (mode == 1) ? evaluator.simpleEval() : evaluator.notSoSimpleEval(numberOfMoves);
+            if(mode == 1){
+                return evaluator.simpleEval();
+            }
+            return (mode == 2) ? evaluator.notSoSimpleEval(numberOfMoves) : evaluator.customEval();
         }
 
         ArrayList<Move> moves = MoveGenerator.getAllMoves(board);
@@ -72,9 +107,11 @@ public class Minimax {
             // Make move, find evaluation at depth = d-1, unmake move, then decide whether to prune.
             // ERROR: board is completely messed up after minimax returns. Probably an issue here.
             // Update: temporary fix - passing a clone of the board to instantiate minimax
-            board.makeMove(move,false,true);
+            board.makeMove(move,false,true); 
+            movesMade++;
             int eval = -(minimaxEvaluation(depth - 1, plyFromRoot + 1, -beta, -alpha));     
             board.unmakeMove(move);
+            movesUnmade++;
 
             if(eval >= alpha){
                 alpha = eval;

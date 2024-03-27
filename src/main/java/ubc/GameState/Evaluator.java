@@ -22,6 +22,24 @@ public class Evaluator {
         return eval * perspective;
     }
 
+    public int customEval(){
+        int blackQueenMoves = 0, whiteQueenMoves = 0;
+        
+        int[][] blackQueens = board.getBlackQueens();
+        for(int[] queen: blackQueens){
+            blackQueenMoves += MoveGenerator.getChessQueenMovesFromSquare(queen, board).size();
+        }
+
+        int[][] whiteQueens = board.getWhiteQueens();
+        for(int[] queen: whiteQueens){
+            whiteQueenMoves += MoveGenerator.getChessQueenMovesFromSquare(queen, board).size();
+        }
+
+        int moveDifference = blackQueenMoves - whiteQueenMoves;
+        int perspective = (board.blackToMove()) ? 1 : -1;
+
+        return moveDifference * perspective;
+    }
     public int notSoSimpleEval(int numberOfMoves){
 
         int perspective = (board.blackToMove()) ? 1 : -1;

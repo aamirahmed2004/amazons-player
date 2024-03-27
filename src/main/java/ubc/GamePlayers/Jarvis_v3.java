@@ -24,7 +24,7 @@ import ygraph.ai.smartfox.games.amazons.HumanPlayer;
  * Jan 5, 2021
  *
  */
-public class Jarvis_v1 extends GamePlayer{
+public class Jarvis_v3 extends GamePlayer{
 
     public final int EMPTY = 0, WHITE = 1, BLACK = 2, ARROW = 3, BOARD_SIZE = 10;
 
@@ -51,7 +51,7 @@ public class Jarvis_v1 extends GamePlayer{
      * @param userName
       * @param passwd
      */
-    public Jarvis_v1(String userName, String passwd, int roomNumber, long timeLimit, boolean debugMode) {
+    public Jarvis_v3(String userName, String passwd, int roomNumber, long timeLimit, boolean debugMode) {
     	this.userName = userName;
     	this.passwd = passwd;
     	this.roomNumber = roomNumber;
@@ -169,30 +169,37 @@ public class Jarvis_v1 extends GamePlayer{
 
         timer.resetTimer();
 
-        int depth = 1;
-        if(moveCount >= 10 && moveCount <= 45)
-            depth = 2;
-        else if(moveCount > 45 && moveCount <= 55)
-            depth = 3;
-        else if(moveCount > 55)
-            depth = 4;
+        int depth = 0;
         timer.startTimer();
         
-        Board clone = (Board) this.board.clone();;
-        Minimax minimax = new Minimax(clone, moveCount, 1, timer.getRemainingTime());; 
+        Board clone;
+        Minimax minimax; 
         System.out.println("Starting evaluation!");
-        minimax.minimaxEvaluation(depth);
-        int evaluation = minimax.getEvaluation();
-        Move bestMove = minimax.getBestMove();
+        int evaluation; 
+        Move bestMove = Move.nullMove(); 
+
+        do{
+            depth++;
+            clone = (Board) this.board.clone();
+            minimax = new Minimax(clone, moveCount, 1, timer.getRemainingTime());
+            evaluation = minimax.minimaxEvaluation(depth);
+
+            if(minimax.searchCancelled && bestMove.isNull()){
+                System.out.println("Evaluation cancelled, making random move");
+                makeRandomMove();
+                break;
+            }
+            bestMove = minimax.getBestMove();
+        } while((Math.pow(timer.getTimeElapsed(), 2) < timer.getRemainingTime()) && !minimax.searchCancelled);
         
         if(bestMove.isNull()){
             System.out.println("----------------------------------");
-            System.out.println("Nah I'd win (we lost)");
+            System.out.println("Who would win? You or Deep Blue (Deep Blue)");
             System.out.println("----------------------------------");
             return;
         }
 
-        System.out.println("\n\nVersion 1: \nCurrent evaluation: " + evaluation + "\nDepth: " + depth + "\nNumber of static evaluations: " + minimax.numStaticEvaluations);
+        System.out.println("\n\nVersion 3: \nCurrent evaluation: " + evaluation + "\nDepth: " + depth + "\nNumber of static evaluations: " + minimax.numStaticEvaluations);
         System.out.println("Best move found: " + bestMove.toString());
         gameRecord.append(bestMove.toString() + " ");
 

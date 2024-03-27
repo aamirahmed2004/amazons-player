@@ -38,6 +38,8 @@ public class Jarvis_v2 extends GamePlayer{
     private int player;
     private int moveCount;
 
+    private long timeLimit;
+
     private int roomNumber;
     private boolean debugMode;
 
@@ -48,11 +50,12 @@ public class Jarvis_v2 extends GamePlayer{
      * @param userName
       * @param passwd
      */
-    public Jarvis_v2(String userName, String passwd, int roomNumber, boolean debugMode) {
+    public Jarvis_v2(String userName, String passwd, int roomNumber, long timeLimit, boolean debugMode) {
     	this.userName = userName;
     	this.passwd = passwd;
     	this.roomNumber = roomNumber;
         this.debugMode = debugMode;
+        this.timeLimit = timeLimit;
     	//To make a GUI-based player, create an instance of BaseGameGUI
     	//and implement the method getGameGUI() accordingly
     	this.gamegui = new BaseGameGUI(this);
@@ -164,26 +167,28 @@ public class Jarvis_v2 extends GamePlayer{
     private void makeAIMove(){
 
         int depth = 1;
-        if(moveCount >= 10 && moveCount <= 44)
+        if(moveCount >= 10 && moveCount <= 45)
             depth = 2;
-        else if(moveCount >= 45 )
+        else if(moveCount > 45 && moveCount <= 55)
             depth = 3;
+        else if(moveCount > 55)
+            depth = 4;
 
         Board clone = (Board) this.board.clone();
-        Minimax minimax = new Minimax(clone, moveCount, 2);
+        Minimax minimax = new Minimax(clone, moveCount, 2, timeLimit);
         System.out.println("Starting evaluation!");
-        int evaluation = minimax.minimaxEvaluation(depth);
+        minimax.minimaxEvaluation(depth);
+        int evaluation = minimax.getEvaluation();
         Move bestMove = minimax.getBestMove();
         
         if(bestMove.isNull()){
-
             System.out.println("----------------------------------");
-            System.out.println("I am that guy (I wasn't)");
+            System.out.println("I am that guy (I was not that guy)");
             System.out.println("----------------------------------");
             return;
         }
 
-        System.out.println("\n\nDepth: " + depth + "\nNumber of static evaluations: " + minimax.numStaticEvaluations);
+        System.out.println("\n\nVersion 2: \nCurrent evaluation: " + evaluation + "\nDepth: " + depth + "\nNumber of static evaluations: " + minimax.numStaticEvaluations);
         System.out.println("Best move found: " + bestMove.toString());
         gameRecord.append(bestMove.toString() + " ");
 

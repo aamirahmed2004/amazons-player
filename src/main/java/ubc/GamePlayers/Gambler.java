@@ -105,6 +105,8 @@ public class Gambler extends GamePlayer{
 
             this.board.makeMove(opponentsMove, true, false);
 
+            try {Thread.sleep(1000);} catch (InterruptedException ignore) {}
+            
             makeRandomMove();
             // makeAIMove();
             

@@ -8,16 +8,32 @@ public class Timer {
     private long startTime;
 
     public Timer(){
-        this.startTime = System.currentTimeMillis();
+
     }
 
     public Timer(long timeLimit){
-        this.startTime = System.currentTimeMillis();
         this.timeLimit = timeLimit;
     }
 
-    public boolean sufficientTimeForNextMove(){
+    public void startTimer(){
+        startTime = System.currentTimeMillis();
+    }
+
+    public void resetTimer(){
+        startTime = 0;
+    }
+
+    public long getTimeElapsed(){
+        return System.currentTimeMillis() - startTime;
+    }
+
+    public long getRemainingTime(){
         long timeElapsed = System.currentTimeMillis() - startTime;
-        return timeElapsed < (timeLimit - GRACE_PERIOD);
+        return timeLimit - timeElapsed;
+    }
+
+    public boolean timeOut(){
+        long timeElapsed = System.currentTimeMillis() - startTime;
+        return timeElapsed > (timeLimit - GRACE_PERIOD);
     }
 }
