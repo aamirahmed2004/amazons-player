@@ -9,12 +9,12 @@ import ubc.GameState.MoveGenerator;
 
 public class Minimax {
 
-    // private final int MAX_DEPTH = 15;
+    private final int MAX_DEPTH = 15;
 
     private int numberOfMoves;
 
-    // private Move bestMoveThisIteration;
-    // private int bestEvalThisIteration;
+    private Move bestMoveThisIteration;
+    private int bestEvalThisIteration;
     private Move bestMove;
     private int bestEval;
 
@@ -22,6 +22,7 @@ public class Minimax {
 
     private int mode;
     private Evaluator evaluator;
+    private Timer timer;
 
     public boolean searchCancelled = false;
 
@@ -40,38 +41,39 @@ public class Minimax {
         this.numberOfMoves = numberOfMoves;
         this.mode = mode;
         this.timeRemaining = timeRemaining;
+        this.timer = new Timer(timeRemaining);
+        timer.startTimer();
         this.bestMove = Move.nullMove();
         this.bestEval = 0;
     }
 
-    /* 
-    Does not work right now 
     public int iterativeDeepening(){
 
+        timer.startTimer();
+    
         bestEvalThisIteration = bestEval = 0;
-		bestMoveThisIteration = bestMove = Move.nullMove();
+        bestMove = Move.nullMove();
+		bestMoveThisIteration = Move.nullMove();
 
         Board newBoard = (Board) this.board.clone();
 
-        for(int depth = 1; depth <= MAX_DEPTH; depth++){
+        for(int depth = 1; (depth < MAX_DEPTH) && (timer.getRemainingTime() > 1000); depth++){
 
-            this.board = newBoard;
-            minimaxEvaluation(depth);
+            bestEvalThisIteration = minimaxEvaluation(depth);
+            bestMoveThisIteration = this.getBestMove();
             System.out.println("Difference: " + (movesMade - movesUnmade));
             movesMade = 0; movesUnmade = 0;
 
             if(searchCancelled){
                 depthReached = depth - 1;
                 break;
-            } else{
-                bestMove = bestMoveThisIteration;
-                bestEval = bestEvalThisIteration;
-            }      
+            } 
+
+            bestMove = bestMoveThisIteration;
+            bestEval = bestEvalThisIteration;     
         }
         return bestEval;
     }
-    */ 
-    
 
     /*
      * Using a variant of minimax called NegaMax modified by alpha-beta pruning
@@ -85,7 +87,7 @@ public class Minimax {
      */
     public int minimaxEvaluation(int depth, int plyFromRoot, int alpha, int beta){
 
-        if(timeRemaining <= 500){
+        if(timer.getRemainingTime() <= 100){
             searchCancelled = true;
             return 0;
         }
@@ -94,8 +96,16 @@ public class Minimax {
             numStaticEvaluations++;
             if(mode == 1){
                 return evaluator.simpleEval();
-            }
-            return (mode == 2) ? evaluator.notSoSimpleEval(numberOfMoves) : evaluator.customEval();
+            } else if(mode == 2){
+                if(numberOfMoves + plyFromRoot > 60) return evaluator.notSoSimpleEval(numberOfMoves + plyFromRoot);
+                else return evaluator.simpleEval();
+            } else if(mode == 3){
+                return evaluator.customEval(numberOfMoves + plyFromRoot);
+            } else if(mode == 4){
+                return evaluator.newEval(numberOfMoves + plyFromRoot);
+            } else if(mode == 5){
+                return evaluator.modifiedNotSoSimpleEval(numberOfMoves + plyFromRoot);
+            } else return evaluator.arrowEval();
         }
 
         ArrayList<Move> moves = MoveGenerator.getAllMoves(board);

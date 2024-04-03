@@ -39,7 +39,7 @@ public class Jarvis_v1 extends GamePlayer{
     private int player;
     private int moveCount;
 
-    private Timer timer;
+    private long timeLimit;
 
     private int roomNumber;
     private boolean debugMode;
@@ -56,7 +56,7 @@ public class Jarvis_v1 extends GamePlayer{
     	this.passwd = passwd;
     	this.roomNumber = roomNumber;
         this.debugMode = debugMode;
-        this.timer = new Timer(timeLimit);
+        this.timeLimit = timeLimit;
     	//To make a GUI-based player, create an instance of BaseGameGUI
     	//and implement the method getGameGUI() accordingly
     	this.gamegui = new BaseGameGUI(this);
@@ -167,8 +167,6 @@ public class Jarvis_v1 extends GamePlayer{
 
     private void makeAIMove(){
 
-        timer.resetTimer();
-
         int depth = 1;
         if(moveCount >= 10 && moveCount <= 45)
             depth = 2;
@@ -176,13 +174,11 @@ public class Jarvis_v1 extends GamePlayer{
             depth = 3;
         else if(moveCount > 55)
             depth = 4;
-        timer.startTimer();
         
         Board clone = (Board) this.board.clone();;
-        Minimax minimax = new Minimax(clone, moveCount, 1, timer.getRemainingTime());; 
+        Minimax minimax = new Minimax(clone, moveCount, 1, timeLimit);
         System.out.println("Starting evaluation!");
-        minimax.minimaxEvaluation(depth);
-        int evaluation = minimax.getEvaluation();
+        int evaluation = minimax.minimaxEvaluation(depth);
         Move bestMove = minimax.getBestMove();
         
         if(bestMove.isNull()){

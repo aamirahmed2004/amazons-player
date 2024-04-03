@@ -22,24 +22,281 @@ public class Evaluator {
         return eval * perspective;
     }
 
-    public int customEval(){
-        int blackQueenMoves = 0, whiteQueenMoves = 0;
+    public int newEval(int numberOfMoves){
+
+        int friendlyKingMoves = 0, enemyKingMoves = 0, friendlyQueenMoves = 0, enemyQueenMoves = 0;
+        int trappedQueenPenalty = 0, trappedQueenBonus = 0;
+
+        int[][] friendlyQueens = (board.blackToMove()) ? board.getBlackQueens() : board.getWhiteQueens();
+        int[][] enemyQueens = (board.blackToMove()) ? board.getWhiteQueens() : board.getBlackQueens();
+
+        for(int[] queen: friendlyQueens){
+            int kingMoves = MoveGenerator.getChessKingMovesFromSquare(queen, board).size();
+            int queenMoves = MoveGenerator.getChessQueenMovesFromSquare(queen, board).size();
+            friendlyKingMoves += kingMoves;
+            friendlyQueenMoves += queenMoves;
+            if(kingMoves == 0) trappedQueenPenalty += 50;
+            else if(kingMoves < 3 || queenMoves < 6) trappedQueenPenalty += 20;
+        }
         
+        for(int[] queen: enemyQueens){
+            int kingMoves = MoveGenerator.getChessKingMovesFromSquare(queen, board).size();
+            int queenMoves = MoveGenerator.getChessQueenMovesFromSquare(queen, board).size();
+            enemyKingMoves += kingMoves;
+            enemyQueenMoves += queenMoves;
+            if(kingMoves == 0) trappedQueenBonus += 50;
+            else if(kingMoves < 3 || queenMoves < 6) trappedQueenBonus += 20;
+        }
+
+        int eval = (1-(numberOfMoves/50))*(friendlyKingMoves - enemyKingMoves) + (numberOfMoves/50)*(friendlyQueenMoves - enemyQueenMoves) 
+                    - trappedQueenPenalty + trappedQueenBonus;
+
+        return eval;
+    }
+
+    public int arrowEval(){
+
+        int eval = 0;
+
+        int[][] friendlyQueens = (board.blackToMove()) ? board.getBlackQueens() : board.getWhiteQueens();
+        for(int[] queen: friendlyQueens){
+            int numKingMoves = MoveGenerator.getChessKingMovesFromSquare(queen, board).size();
+            eval += numKingMoves;
+            if (numKingMoves == 0) eval -= 10;
+            else if (numKingMoves < 3) eval -= 5;
+        }
+
+        int[][] enemyQueens = (board.blackToMove()) ? board.getWhiteQueens() : board.getBlackQueens();
+        for(int[] queen: enemyQueens){
+            int numKingMoves = MoveGenerator.getChessKingMovesFromSquare(queen, board).size();
+            eval -= numKingMoves;
+            if (numKingMoves == 0) eval += 10;
+            else if (numKingMoves < 3) eval += 5;
+        }
+
+        return eval;
+    }
+
+    public int customEval(int numberOfMoves){
+
+        int blackMoves = (int) MoveGenerator.getAllMoves(board, Board.BLACK).size()/10;
+        int whiteMoves = (int) MoveGenerator.getAllMoves(board, Board.WHITE).size()/10;
+
+        int f_Q1 = 0, f_Q2 = 0, f_Q3 = 0, f_Q4 = 0, w_Q1 = 0, w_Q2 = 0, w_Q3 = 0, w_Q4 = 0;
+
+        int blackCornerPenalty = 0, whiteCornerPenalty = 0;
+        int blackDistancePenalty = 0, whiteDistancePenalty = 0;
+        int blackEdgePenalty = 0, whiteEdgePenalty = 0;
+        int modifier = 0, whiteArrowPenalty = 0;
+
         int[][] blackQueens = board.getBlackQueens();
         for(int[] queen: blackQueens){
-            blackQueenMoves += MoveGenerator.getChessQueenMovesFromSquare(queen, board).size();
+
+            int numKingMoves = MoveGenerator.getChessKingMovesFromSquare(queen, board).size();
+            if(numKingMoves == 0){
+                modifier += 50;
+            } else if(numKingMoves >= 1 && numKingMoves <= 3){
+                modifier += 25;
+            }
+
+            blackMoves *= numKingMoves/4;
+
+            if(queen[0] < 5 && queen[1] < 5) 
+                f_Q1 = (f_Q1 == 0) ? f_Q1 + 10 : f_Q1 - 3;
+            else if(queen[0] < 5 && queen[1] >= 5) 
+                f_Q2 = (f_Q2 == 0) ? f_Q2 + 10 : f_Q2 - 3;
+            else if(queen[0] >= 5 && queen[1] < 5)
+                f_Q3 = (f_Q3 == 0) ? f_Q3 + 10 : f_Q3 - 3;
+            else f_Q4 = (f_Q4 == 0) ? f_Q4 + 10 : f_Q4 - 3;
+
+            if(queen[0] <= 1 && queen[1] <= 1){
+                blackCornerPenalty += 50;
+            } else if(queen[0] <= 1 && queen[1] >= 8){
+                blackCornerPenalty += 50;
+            } else if(queen[0] >= 8 && queen[1] <= 1){
+                blackCornerPenalty += 50;
+            } else if(queen[0] >= 8 && queen[1] >= 8){
+                blackCornerPenalty += 50;
+            }
+
+            if(queen[0] == 0 || queen[0] == Board.BOARD_SIZE-1 || queen[1] == 0 || queen[1] == Board.BOARD_SIZE-1){
+                blackEdgePenalty += 25;
+            }
+
+            for(int[] queen2: blackQueens){
+                if((queen[0] != queen2[0]) || (queen[1] != queen2[1])){
+                    int distance = Math.abs(queen[0] - queen2[0]) + Math.abs(queen[1] - queen2[1]);
+                    if((queen[0] - queen2[0]) == (queen[1] - queen2[1])){
+                        distance = distance/2;
+                    }
+                    if(distance == 1){
+                        blackDistancePenalty += (int)(20*distance)/2;
+                    } else if(distance == 2){
+                        blackDistancePenalty += (int)(12*distance)/2;
+                    } else if(distance == 3){
+                        blackDistancePenalty += (int)(4*distance)/2;
+                    }
+                }
+            }
         }
 
         int[][] whiteQueens = board.getWhiteQueens();
         for(int[] queen: whiteQueens){
-            whiteQueenMoves += MoveGenerator.getChessQueenMovesFromSquare(queen, board).size();
+
+            int numKingMoves = MoveGenerator.getChessKingMovesFromSquare(queen, board).size();
+            if(numKingMoves == 0){
+                whiteArrowPenalty += 50;
+            } else if(numKingMoves >= 1 && numKingMoves <= 3){
+                whiteArrowPenalty += 25;
+            }
+
+            whiteMoves *= numKingMoves/4;
+
+            if(queen[0] < 5 && queen[1] < 5) 
+                w_Q1 = (w_Q1 == 0) ? w_Q1 + 10 : w_Q1 - 3;
+            else if(queen[0] < 5 && queen[1] >= 5) 
+                w_Q2 = (w_Q2 == 0) ? w_Q2 + 10 : w_Q2 - 3;
+            else if(queen[0] >= 5 && queen[1] < 5)
+                w_Q3 = (w_Q3 == 0) ? w_Q3 + 10 : w_Q3 - 3;
+            else w_Q4 = (w_Q4 == 0) ? w_Q4 + 10 : w_Q4 - 3;
+
+            if(queen[0] <= 1 && queen[1] <= 1){
+                whiteCornerPenalty += 50;
+            } else if(queen[0] <= 1 && queen[1] >= 8){
+                whiteCornerPenalty += 50;
+            } else if(queen[0] >= 8 && queen[1] <= 1){
+                whiteCornerPenalty += 50;
+            } else if(queen[0] >= 8 && queen[1] >= 8){
+                whiteCornerPenalty += 50;
+            }
+
+            if(queen[0] == 0 || queen[0] == Board.BOARD_SIZE-1 || queen[1] == 0 || queen[1] == Board.BOARD_SIZE-1){
+                whiteEdgePenalty += 25;
+            }
+
+            for(int[] queen2: whiteQueens){
+                if((queen[0] != queen2[0]) || (queen[1] != queen2[1])){
+                    int distance = Math.abs(queen[0] - queen2[0]) + Math.abs(queen[1] - queen2[1]);
+                    if((queen[0] - queen2[0]) == (queen[1] - queen2[1])){
+                        distance = distance/2;
+                    }
+                    if(distance == 1){
+                        whiteDistancePenalty += (int)(20*distance)/2;
+                    } else if(distance == 2){
+                        whiteDistancePenalty += (int)(12*distance)/2;
+                    } else if(distance == 3){
+                        whiteDistancePenalty += (int)(4*distance)/2;
+                    }
+                }
+            }
         }
 
-        int moveDifference = blackQueenMoves - whiteQueenMoves;
+        int blackScore = blackMoves - blackCornerPenalty - blackDistancePenalty - blackEdgePenalty - modifier;
+        int whiteScore = whiteMoves - whiteCornerPenalty - whiteDistancePenalty - whiteEdgePenalty - whiteArrowPenalty;
+
+        if(numberOfMoves < 50){
+            blackScore += (1-(numberOfMoves/50))*(f_Q1 + f_Q2 + f_Q3 + f_Q4);
+            whiteScore += (1-(numberOfMoves/50))*(w_Q1 + w_Q2 + w_Q3 + w_Q4);
+        }
+
+        int eval = blackScore - whiteScore;
         int perspective = (board.blackToMove()) ? 1 : -1;
 
-        return moveDifference * perspective;
+        return eval * perspective;
     }
+
+    public int modifiedNotSoSimpleEval(int numberOfMoves){
+        int eval = notSoSimpleEval(numberOfMoves);
+        double modifier = 5;
+        int f_Q1 = 0, f_Q2 = 0, f_Q3 = 0, f_Q4 = 0, w_Q1 = 0, w_Q2 = 0, w_Q3 = 0, w_Q4 = 0;
+
+        if(numberOfMoves > 40) return eval * (int)modifier;
+
+        int[][] friendlyQueens = (board.blackToMove()) ? board.getBlackQueens() : board.getWhiteQueens();
+
+        for(int[] queen: friendlyQueens){
+
+            int numKingMoves = MoveGenerator.getChessKingMovesFromSquare(queen, board).size();
+            if(numKingMoves == 0){
+                modifier -= 1;
+            } else if(numKingMoves >= 1 && numKingMoves <= 3){
+                modifier -= 0.4;
+            }
+
+            if(queen[0] <= 1 && queen[1] <= 1){
+                modifier -= 0.50;
+            } else if(queen[0] <= 1 && queen[1] >= 8){
+                modifier -= 0.50;
+            } else if(queen[0] >= 8 && queen[1] <= 1){
+                modifier -= 0.50;
+            } else if(queen[0] >= 8 && queen[1] >= 8){
+                modifier -= 0.50;
+            }
+
+            if(queen[0] == 0 || queen[0] == Board.BOARD_SIZE-1 || queen[1] == 0 || queen[1] == Board.BOARD_SIZE-1){
+                modifier -= 0.25;
+            }
+
+            for(int[] queen2: friendlyQueens){
+                if((queen[0] != queen2[0]) || (queen[1] != queen2[1])){
+                    int distance = Math.abs(queen[0] - queen2[0]) + Math.abs(queen[1] - queen2[1]);
+                    if((queen[0] - queen2[0]) == (queen[1] - queen2[1])){
+                        distance = distance/2;
+                    }
+                    if(distance == 1){
+                        modifier -= 0.15;
+                    } else if(distance == 2){
+                        modifier -= 0.10;
+                    } 
+                }
+            }
+        }
+
+        int[][] enemyQueens = (board.blackToMove()) ? board.getWhiteQueens() : board.getBlackQueens();
+
+        for(int[] queen: enemyQueens){
+
+            int numKingMoves = MoveGenerator.getChessKingMovesFromSquare(queen, board).size();
+            if(numKingMoves == 0){
+                modifier += 1;
+            } else if(numKingMoves >= 1 && numKingMoves <= 3){
+                modifier += 0.4;
+            }
+
+            if(queen[0] <= 1 && queen[1] <= 1){
+                modifier += 0.50;
+            } else if(queen[0] <= 1 && queen[1] >= 8){
+                modifier += 0.50;
+            } else if(queen[0] >= 8 && queen[1] <= 1){
+                modifier += 0.50;
+            } else if(queen[0] >= 8 && queen[1] >= 8){
+                modifier += 0.50;
+            }
+
+            if(queen[0] == 0 || queen[0] == Board.BOARD_SIZE-1 || queen[1] == 0 || queen[1] == Board.BOARD_SIZE-1){
+                modifier += 0.25;
+            }
+
+            for(int[] queen2: enemyQueens){
+                if((queen[0] != queen2[0]) || (queen[1] != queen2[1])){
+                    int distance = Math.abs(queen[0] - queen2[0]) + Math.abs(queen[1] - queen2[1]);
+                    if((queen[0] - queen2[0]) == (queen[1] - queen2[1])){
+                        distance = distance/2;
+                    }
+                    if(distance == 1){
+                        modifier += 0.15;
+                    } else if(distance == 2){
+                        modifier += 0.10;
+                    } 
+                }
+            }
+        }
+
+        if(modifier == 0.0) return eval;
+
+        return eval * (int)modifier;
+    }
+
     public int notSoSimpleEval(int numberOfMoves){
 
         int perspective = (board.blackToMove()) ? 1 : -1;
@@ -108,7 +365,7 @@ public class Evaluator {
         c2 = c2 * perspective;
 
         // TODO: implement functions f_1(w) through f_4(w) such that sigma f_i(w) = 1, f_1(0) = 1, and f_4(0) = 0. 
-        double t = f1(w)*t1 + f2(w)*c1 + f3(w)*c2 + f4(w)*t2;
+        double t = f1(w)*t1 + (1-f1(w))*t2;
         double m = mobilityEval(w);
         
         int eval = (int)(t+m);

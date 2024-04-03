@@ -26,7 +26,7 @@ import ygraph.ai.smartfox.games.amazons.HumanPlayer;
  */
 public class Jarvis_v3 extends GamePlayer{
 
-    public final int EMPTY = 0, WHITE = 1, BLACK = 2, ARROW = 3, BOARD_SIZE = 10;
+    public final int EMPTY = 0, WHITE = 1, BLACK = 2, ARROW = 3, BOARD_SIZE = 10, MAX_DEPTH = 25;
 
     private GameClient gameClient; 
     private BaseGameGUI gamegui;
@@ -38,6 +38,7 @@ public class Jarvis_v3 extends GamePlayer{
 	
     private int player;
     private int moveCount;
+    private int evalMode = 1;
 
     private Timer timer;
 
@@ -51,10 +52,11 @@ public class Jarvis_v3 extends GamePlayer{
      * @param userName
       * @param passwd
      */
-    public Jarvis_v3(String userName, String passwd, int roomNumber, long timeLimit, boolean debugMode) {
+    public Jarvis_v3(String userName, String passwd, int roomNumber, int evalMode, long timeLimit, boolean debugMode) {
     	this.userName = userName;
     	this.passwd = passwd;
     	this.roomNumber = roomNumber;
+        this.evalMode = evalMode;
         this.debugMode = debugMode;
         this.timer = new Timer(timeLimit);
     	//To make a GUI-based player, create an instance of BaseGameGUI
@@ -114,8 +116,9 @@ public class Jarvis_v3 extends GamePlayer{
 
             this.board.makeMove(opponentsMove, true, false);
 
-            // makeRandomMove();
-            makeAIMove();
+            if(player == WHITE && moveCount == 0)
+                makeRandomMove();
+            else makeAIMove();
             moveCount++;
 
         } else if (messageType.equals(GameMessage.GAME_ACTION_START)) {
@@ -133,7 +136,8 @@ public class Jarvis_v3 extends GamePlayer{
             System.out.println("Timer Started on Black");
 
             if(this.player == BLACK){
-                makeRandomMove();
+                makeOpeningMove();
+                // makeRandomMove();
                 // makeSampleMove();
             }
             moveCount++;
@@ -175,31 +179,36 @@ public class Jarvis_v3 extends GamePlayer{
         Board clone;
         Minimax minimax; 
         System.out.println("Starting evaluation!");
-        int evaluation; 
+        int evaluation = 0; 
         Move bestMove = Move.nullMove(); 
 
         do{
             depth++;
             clone = (Board) this.board.clone();
-            minimax = new Minimax(clone, moveCount, 1, timer.getRemainingTime());
-            evaluation = minimax.minimaxEvaluation(depth);
+            minimax = new Minimax(clone, moveCount, evalMode, timer.getRemainingTime());
+            minimax.minimaxEvaluation(depth);
 
             if(minimax.searchCancelled && bestMove.isNull()){
-                System.out.println("Evaluation cancelled, making random move");
+                System.out.println("Time elapsed: " + timer.getTimeElapsed() + "\nEvaluation cancelled, making random move");
                 makeRandomMove();
                 break;
             }
-            bestMove = minimax.getBestMove();
-        } while((Math.pow(timer.getTimeElapsed(), 2) < timer.getRemainingTime()) && !minimax.searchCancelled);
+
+            if(!minimax.searchCancelled) {
+                bestMove = minimax.getBestMove();
+                evaluation = minimax.getEvaluation();
+            }
+
+        } while(!minimax.searchCancelled && depth < MAX_DEPTH);
         
         if(bestMove.isNull()){
             System.out.println("----------------------------------");
-            System.out.println("Who would win? You or Deep Blue (Deep Blue)");
+            System.out.println("Who would win? v3."+ evalMode + " or Deep Blue (Deep Blue)");
             System.out.println("----------------------------------");
             return;
         }
 
-        System.out.println("\n\nVersion 3: \nCurrent evaluation: " + evaluation + "\nDepth: " + depth + "\nNumber of static evaluations: " + minimax.numStaticEvaluations);
+        System.out.println("\n\nVersion 3." + evalMode + ": \nCurrent evaluation: " + evaluation + "\nDepth: " + depth + "\nNumber of static evaluations: " + minimax.numStaticEvaluations);
         System.out.println("Best move found: " + bestMove.toString());
         gameRecord.append(bestMove.toString() + " ");
 
@@ -211,6 +220,36 @@ public class Jarvis_v3 extends GamePlayer{
         getGameClient().sendMoveMessage(currentPos, newPos, arrowPos);
         getGameGUI().updateGameState(currentPos, newPos, arrowPos);
 
+    }
+
+    private void makeOpeningMove(){
+
+        Random random = new Random();
+        double randomNumber = random.nextDouble(); // Generate a random number between 0 and 1
+        Move move = Move.nullMove();
+        
+        if (randomNumber < 0.2) {
+            move = new Move("g10-g5/i5");
+        } else if (randomNumber < 0.4) {
+            move = new Move("g10-g3/i5");
+        } else if (randomNumber < 0.6) {
+            move = new Move("g10-g5/i5");
+        } else if (randomNumber < 0.8) {
+            move = new Move("d10-d3/b5");
+        } else {
+            move = new Move("d10-g2/e2");
+        }
+
+        System.out.println("Opening Move: " + move.toString());
+        gameRecord.append(move.toString() + " ");
+
+		this.board.makeMove(move);
+
+        Move moveForServer = move.getMoveForServer();
+        ArrayList<Integer> currentPos = moveForServer.getOldPos(), newPos = moveForServer.getNewPos(), arrowPos = moveForServer.getArrowPos();
+
+        getGameClient().sendMoveMessage(currentPos, newPos, arrowPos);
+        getGameGUI().updateGameState(currentPos, newPos, arrowPos);
     }
 
     private void makeRandomMove() {
