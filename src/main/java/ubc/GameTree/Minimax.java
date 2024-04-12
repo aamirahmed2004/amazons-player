@@ -97,7 +97,7 @@ public class Minimax {
             if(mode == 1){
                 return evaluator.simpleEval();
             } else if(mode == 2){
-                if(numberOfMoves + plyFromRoot > 60) return evaluator.notSoSimpleEval(numberOfMoves + plyFromRoot);
+                if(numberOfMoves < 40) return evaluator.notSoSimpleEval(numberOfMoves);
                 else return evaluator.simpleEval();
             } else if(mode == 3){
                 return evaluator.customEval(numberOfMoves + plyFromRoot);

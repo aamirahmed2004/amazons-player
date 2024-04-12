@@ -297,14 +297,18 @@ public class Evaluator {
         return eval * (int)modifier;
     }
 
+    public int notSoSimpleEval(){
+        return notSoSimpleEval(50);
+    }
+
     public int notSoSimpleEval(int numberOfMoves){
 
         int perspective = (board.blackToMove()) ? 1 : -1;
 
         // Start with evaluations that need queen distances
         double t1 = 0.0, c1 = 0.0, w = 0.0;
-        int[][] blackMinDistances_Queen = getPlayerMinDistances(Board.BLACK, QUEEN,numberOfMoves);
-        int[][] whiteMinDistances_Queen = getPlayerMinDistances(Board.WHITE, QUEEN,numberOfMoves);
+        int[][] blackMinDistances_Queen = getPlayerMinDistances(Board.BLACK, QUEEN,50);
+        int[][] whiteMinDistances_Queen = getPlayerMinDistances(Board.WHITE, QUEEN,50);
 
         // Compute the following sums for every empty square
         for(int i = 0; i < Board.BOARD_SIZE; i++){
@@ -329,7 +333,6 @@ public class Evaluator {
 				// else if distances are equal and square is reachable: t1 is incremented by K depending on the player whose turn it is. We use |k| = 0.2 
 				else if(blackMinDistances_Queen[i][j] != Integer.MAX_VALUE) 
 					t1 += 0.2 * perspective;
-			
             }
         }
 
@@ -365,7 +368,7 @@ public class Evaluator {
         c2 = c2 * perspective;
 
         // TODO: implement functions f_1(w) through f_4(w) such that sigma f_i(w) = 1, f_1(0) = 1, and f_4(0) = 0. 
-        double t = f1(w)*t1 + (1-f1(w))*t2;
+        double t = f1(w)*t1 + f2(w)*c1 + f3(w)*c2 + f4(w)*t2;
         double m = mobilityEval(w);
         
         int eval = (int)(t+m);
@@ -606,23 +609,43 @@ public class Evaluator {
      * 
      *  f(w, alpha) = w * 1.15^(-alpha) / 50
      */
-    private double f(double w, double alpha){
-        return w / (50 * Math.pow(1.15, alpha));
-    }
+    // private double f(double w, double alpha){
+    //     return w / (50 * Math.pow(1.15, alpha));
+    // }
 
-    private double f1(double w){
-        return (100-w)/100.0;
-    }
+    // private double f1(double w){
+    //     return (100-w)/100.0;
+    // }
 
-    private double f2(double w){
-        return w/400.0;
-    }
+    // private double f2(double w){
+    //     return w/400.0;
+    // }
 
-    private double f3(double w){
-        return w/400.0;
-    }
+    // private double f3(double w){
+    //     return w/400.0;
+    // }
 
-    private double f4(double w){
-        return w/200.0;
-    }
+    // private double f4(double w){
+    //     return w/200.0;
+    // }
+
+    private static double f1(double w) {
+		return (100.0 - w) / 100.0;
+	}
+	
+	private static double f2(double w) {
+		return (1.0 - f1(w)) / 4.0;
+	}
+	
+	private static double f3(double w) {
+		return (1.0 - f1(w)) / 4.0;
+	}
+	
+	private static double f4(double w) {
+		return (1.0 - f1(w)) / 4.0;
+	}
+	
+	private static double f(double w, double mobility) {
+		return  w * Math.pow(1.2, -mobility) / 45.0;
+	}
 }
