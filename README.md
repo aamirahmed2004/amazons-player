@@ -4,7 +4,7 @@
 
 #### Note: this project was intended for an AI Amazons tournament for COSC322. You cannot play the game without connecting through UBC VPN, since the client must connect to the course server for the GUI to display all the pieces and set up a game (this is how the starter code was set up). I am working on making my own GUI and remaking the project in C# to make it playable on any device. 
 
-Currently, we use a fixed-depth NegaMax variant of Minimax with alpha-beta pruning and iterative deepening.
+Currently, we use a NegaMax variant of Minimax with alpha-beta pruning and iterative deepening.
 
 References used so far:
 - [Variants of minimax] (https://www.ngorski.com/data/uploads/aigametheory/efficient-implementation-of-combinatoric-ai.pdf)
